@@ -62,6 +62,8 @@ def _match(rule: dict, days: int | None, rain: int | None, today: date) -> str |
         low, high = trigger["window_days"]
         return f"Your crop is about {days} days after planting (window {low}–{high} days)."
     if kind == "months":
+        if today.month not in trigger["months"]:
+            return None
         return f"It is {today.strftime('%B')}, which is in the usual window for this activity."
     if rain is None:
         return None
