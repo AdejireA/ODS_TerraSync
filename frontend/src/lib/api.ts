@@ -259,6 +259,66 @@ export function getDailyInsights(params: {
   return request<DailyInsightsResponse>(`/insights/today?${query.toString()}`);
 }
 
+export interface HarvestWindow {
+  start_date: string;
+  end_date: string;
+  counted_from: string;
+  uncertainty: string;
+  source: { title: string; url: string; verified: boolean };
+  review_status: string;
+}
+
+export type HarvestPhase = "growing" | "approaching_harvest" | "harvest_window" | "past_typical_window" | "unknown";
+
+export interface SuggestedReport {
+  crop: string;
+  state: string;
+  lga: string;
+  available_date: string;
+  status: "expected" | "available";
+  farm_id: string | null;
+}
+
+export interface HarvestReadinessResponse {
+  date: string;
+  context: {
+    farm_id: string | null;
+    crop: string;
+    state: string | null;
+    lga: string | null;
+    planting_date: string | null;
+    days_after_planting: number | null;
+  };
+  phase: HarvestPhase;
+  days_to_window: number | null;
+  expected_window: HarvestWindow | null;
+  readiness_checks: InsightItem[];
+  post_harvest: InsightItem[];
+  market: InsightItem[];
+  weather_alerts: InsightItem[];
+  suggested_report: SuggestedReport | null;
+  missing_context: { field: string; message: string }[];
+  notes: string[];
+}
+
+export function getHarvestReadiness(params: {
+  farmId?: string;
+  crop?: string;
+  state?: string;
+  lga?: string;
+  plantingDate?: string;
+  includeWeather?: boolean;
+}) {
+  const query = new URLSearchParams();
+  if (params.farmId) query.set("farm_id", params.farmId);
+  if (params.crop) query.set("crop", params.crop);
+  if (params.state) query.set("state", params.state);
+  if (params.lga) query.set("lga", params.lga);
+  if (params.plantingDate) query.set("planting_date", params.plantingDate);
+  if (params.includeWeather === false) query.set("include_weather", "false");
+  return request<HarvestReadinessResponse>(`/harvest-readiness?${query.toString()}`);
+}
+
 export function searchKnowledge(params: { crop: string; category?: string; state?: string; q?: string }) {
   const query = new URLSearchParams({ crop: params.crop });
   if (params.category) query.set("category", params.category);
@@ -392,6 +452,48 @@ export function getGuidance(crop: string, language: "en" | "yo") {
   return request<{ items: GuidanceItem[] }>(
     `/guidance?crop=${encodeURIComponent(crop)}&language=${language}`,
   );
+}
+
+// ---------------------------------------------------------------- supply intelligence
+
+export interface SupplyTotal {
+  crop: string;
+  unit: string;
+  total_quantity: number;
+  reports: number;
+  with_interest: number;
+  lgas: string[];
+}
+
+export interface SupplyWeek {
+  crop: string;
+  lga: string;
+  unit: string;
+  week_start: string;
+  total_quantity: number;
+  reports: number;
+  with_interest: number;
+  available_now: number;
+}
+
+export interface SupplySummaryResponse {
+  generated_at: string;
+  horizon_days: number;
+  filters: { crop: string | null; state: string | null; lga: string | null };
+  totals: SupplyTotal[];
+  weekly: SupplyWeek[];
+  post_harvest_guidance: Record<string, { rule_id: string; title: string; action: string; review_status: string }[]>;
+  disclaimer: string;
+}
+
+export function getSupplySummary(params: { crop?: string; state?: string; lga?: string; days?: number }) {
+  const query = new URLSearchParams();
+  if (params.crop) query.set("crop", params.crop);
+  if (params.state) query.set("state", params.state);
+  if (params.lga) query.set("lga", params.lga);
+  if (params.days) query.set("days", String(params.days));
+  const qs = query.toString();
+  return request<SupplySummaryResponse>(`/supply/summary${qs ? `?${qs}` : ""}`);
 }
 
 // ---------------------------------------------------------------- voice
