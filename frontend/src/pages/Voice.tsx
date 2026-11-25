@@ -22,6 +22,7 @@ export function Voice() {
           <div>
             <h2 className="text-page-title">{t("voiceTitle")}</h2>
             <p className="mt-1 text-sm text-primary-foreground/80">{t("voiceSubtitle")}</p>
+            <p className="mt-2 text-xs text-primary-foreground/70">{t("voiceOgunNotice")}</p>
           </div>
         </Card>
 

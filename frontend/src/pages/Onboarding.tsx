@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFarm } from "../contexts/FarmContext";
-import { STATE_PROFILES, getLgasForState } from "../data/locations";
+import { STATE_PROFILES, getLgasForState, isStateActive } from "../data/locations";
 import { CROP_PROFILES, cropName } from "../data/crops";
 import {
   AREA_UNITS,
@@ -174,9 +174,12 @@ export function Onboarding() {
               className="w-full rounded-md border border-border bg-card p-2"
             >
               {STATE_PROFILES.map((option) => (
-                <option key={option.name} value={option.name}>{option.name}</option>
+                <option key={option.name} value={option.name} disabled={!isStateActive(option.name)}>
+                  {option.name}{!isStateActive(option.name) ? ` ${t("stateComingSoon")}` : ""}
+                </option>
               ))}
             </select>
+            <p className="mt-1 text-metadata">{t("activeStateNotice")}</p>
           </label>
 
           <label className="block">

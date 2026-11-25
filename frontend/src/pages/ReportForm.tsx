@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { createHarvestReport } from "../lib/api";
 import { CROP_PROFILES, cropName } from "../data/crops";
-import { STATE_PROFILES, getLgasForState } from "../data/locations";
+import { STATE_PROFILES, getLgasForState, isStateActive } from "../data/locations";
 import { UNITS } from "../i18n/translations";
 import { Button } from "../components/ui/Button";
 import { PageHeader } from "../components/ui/PageHeader";
@@ -109,9 +109,12 @@ export function ReportForm() {
           className="w-full rounded-md border border-border bg-card p-2"
         >
           {STATE_PROFILES.map((option) => (
-            <option key={option.name} value={option.name}>{option.name}</option>
+            <option key={option.name} value={option.name} disabled={!isStateActive(option.name)}>
+              {option.name}{!isStateActive(option.name) ? ` ${t("stateComingSoon")}` : ""}
+            </option>
           ))}
         </select>
+        <p className="mt-1 text-metadata">{t("activeStateNotice")}</p>
       </label>
 
       <label className="block">

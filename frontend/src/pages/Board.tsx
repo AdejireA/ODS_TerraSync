@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { listHarvestReports, type HarvestReportSummary } from "../lib/api";
-import { STATE_PROFILES, getLgasForState } from "../data/locations";
+import { STATE_PROFILES, getLgasForState, isStateActive } from "../data/locations";
 import { Card } from "../components/ui/Card";
 import { PageHeader } from "../components/ui/PageHeader";
 import { LoadingState, ErrorState, EmptyState } from "../components/ui/StatusStates";
@@ -58,7 +58,9 @@ export function Board() {
         >
           <option value="">{t("state")}</option>
           {STATE_PROFILES.map((option) => (
-            <option key={option.name} value={option.name}>{option.name}</option>
+            <option key={option.name} value={option.name} disabled={!isStateActive(option.name)}>
+              {option.name}{!isStateActive(option.name) ? ` ${t("stateComingSoon")}` : ""}
+            </option>
           ))}
         </select>
 

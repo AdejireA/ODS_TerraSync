@@ -9,12 +9,12 @@ export const UNITS = ["bags", "kg", "tons", "baskets"] as const;
 export const translations = {
   en: {
     appTitle: "TerraSync",
-    tagline: "Report and track harvests across Southwest Nigeria",
+    tagline: "From farm to food supply, for Ogun State farmers",
 
     // Landing
     landingHeadline: "What needs your attention today?",
     landingSubheadline:
-      "TerraSync helps smallholder farmers in Southwest Nigeria make timely farming decisions and connect upcoming harvests with buyers.",
+      "TerraSync helps smallholder farmers across Ogun State's 20 LGAs make timely farming decisions and connect upcoming harvests with buyers.",
     landingCtaPrimary: "Set up my farm",
     landingCtaSecondary: "I already set up my farm",
     landingPillarFarmTitle: "Farm intelligence",
@@ -153,7 +153,7 @@ export const translations = {
     settingsFarm: "Farm profile",
     settingsFarmEdit: "Edit farm information",
     settingsAbout: "About TerraSync",
-    settingsAboutBody: "TerraSync helps smallholder farmers in Southwest Nigeria make timely farming decisions and connect harvests with buyers.",
+    settingsAboutBody: "TerraSync helps smallholder farmers across Ogun State make timely farming decisions and connect harvests with buyers.",
     settingsDataNotice: "Your farm profile is saved on this device only and is not yet synced to an account.",
 
     // More (mobile overflow)
@@ -179,6 +179,8 @@ export const translations = {
     selectLga: "Select an LGA",
     lgaPlaceholder: "e.g. Odeda",
     contactPlaceholder: "e.g. 080xxxxxxx",
+    stateComingSoon: "(coming soon)",
+    activeStateNotice: "TerraSync currently supports Ogun State. Other states are coming soon.",
 
     // Produce board
     boardTitle: "Upcoming harvests",
@@ -196,14 +198,15 @@ export const translations = {
     voiceEnd: "End call",
     voiceComingSoon: "Voice calling is not connected yet. This page will host the LiveKit voice assistant once the backend voice service is ready.",
     voiceLanguageLabel: "Spoken language",
+    voiceOgunNotice: "Tuned to Ogun State farming context.",
   },
   yo: {
     appTitle: "TerraSync",
-    tagline: "Ròyìn àti tọpinpin ìkórè ní Gúúsù-Ìwọ̀-Oòrùn Nàìjíríà",
+    tagline: "Láti oko sí ọjà oúnjẹ, fún àwọn àgbẹ̀ Ìpínlẹ̀ Ògùn",
 
     landingHeadline: "Kí ni ó yẹ kó gba àfiyèsí rẹ lónìí?",
     landingSubheadline:
-      "TerraSync ń ran àwọn àgbẹ̀ kékèké lọ́wọ́ ní Gúúsù-Ìwọ̀-Oòrùn Nàìjíríà láti ṣe ìpinnu oko tó yẹ, kí wọ́n sì so ìkórè tó ń bọ̀ pọ̀ mọ́ àwọn tó fẹ́ rà.",
+      "TerraSync ń ran àwọn àgbẹ̀ kékèké lọ́wọ́ ní gbogbo Ìjọba Ìbílẹ̀ 20 ní Ìpínlẹ̀ Ògùn láti ṣe ìpinnu oko tó yẹ, kí wọ́n sì so ìkórè tó ń bọ̀ pọ̀ mọ́ àwọn tó fẹ́ rà.",
     landingCtaPrimary: "Ṣètò oko mi",
     landingCtaSecondary: "Mo ti ṣètò oko mi",
     landingPillarFarmTitle: "Ìmọ̀ oko",
@@ -332,7 +335,7 @@ export const translations = {
     settingsFarm: "Pátákò oko",
     settingsFarmEdit: "Ṣàtúnṣe àlàyé oko",
     settingsAbout: "Nípa TerraSync",
-    settingsAboutBody: "TerraSync ń ran àwọn àgbẹ̀ kékèké lọ́wọ́ ní Gúúsù-Ìwọ̀-Oòrùn Nàìjíríà láti ṣe ìpinnu oko tó yẹ, kí wọ́n sì so ìkórè pọ̀ mọ́ àwọn tó fẹ́ rà.",
+    settingsAboutBody: "TerraSync ń ran àwọn àgbẹ̀ kékèké lọ́wọ́ ní Ìpínlẹ̀ Ògùn láti ṣe ìpinnu oko tó yẹ, kí wọ́n sì so ìkórè pọ̀ mọ́ àwọn tó fẹ́ rà.",
     settingsDataNotice: "A fi pátákò oko rẹ pamọ́ sórí ẹ̀rọ yìí nìkan, kò tí ì so pọ̀ mọ́ àkáǔntì.",
 
     moreTitle: "Síi",
@@ -356,6 +359,8 @@ export const translations = {
     selectLga: "Yan ìjọba ìbílẹ̀",
     lgaPlaceholder: "f.a. Odeda",
     contactPlaceholder: "f.a. 080xxxxxxx",
+    stateComingSoon: "(ń bọ̀ lẹ́yìn)",
+    activeStateNotice: "TerraSync ń ṣiṣẹ́ ní Ìpínlẹ̀ Ògùn nìkan lọ́wọ́lọ́wọ́. Àwọn ìpínlẹ̀ mìíràn ń bọ̀ lẹ́yìn.",
 
     boardTitle: "Àwọn ìkórè tó ń bọ̀",
     boardEmpty: "Kò sí ìròyìn ìkórè kankan síbẹ̀.",
@@ -371,6 +376,7 @@ export const translations = {
     voiceEnd: "Parí ìpè",
     voiceComingSoon: "Ìpè ohùn kò tí ì so pọ̀. Ojú-ìwé yìí yóò gbé olùrànlọ́wọ́ ohùn LiveKit nígbà tí iṣẹ́ ẹ̀rọ ohùn bá ti ṣètán.",
     voiceLanguageLabel: "Èdè ìsọ̀rọ̀",
+    voiceOgunNotice: "A ṣètò rẹ̀ fún ipò oko Ìpínlẹ̀ Ògùn.",
   },
 } as const satisfies Record<Language, Record<string, string>>;
 
