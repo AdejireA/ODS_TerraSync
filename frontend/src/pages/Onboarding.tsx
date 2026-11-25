@@ -402,14 +402,8 @@ export function Onboarding() {
 
           <Card className="space-y-2">
             <p className="font-semibold">{farmName || t("appTitle")}</p>
-            <p className="text-sm text-muted-foreground">{lga}, {state}</p>
             <p className="text-sm text-muted-foreground">
-              {community || t("onboardingNoCommunity")}
-            </p>
-            <p className="text-metadata">
-              {latitude != null && longitude != null
-                ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-                : t("onboardingNoCoordinates")}
+              {community ? `${community}, ` : ""}{lga}, {state}
             </p>
             <button
               type="button"
