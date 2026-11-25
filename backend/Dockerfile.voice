@@ -1,0 +1,10 @@
+# Voice worker image. Must share the API's database volume (TERRASYNC_DATABASE_PATH).
+FROM python:3.13-slim
+WORKDIR /app
+COPY requirements.txt requirements-voice.txt ./
+RUN pip install --no-cache-dir -r requirements-voice.txt
+COPY app ./app
+COPY voice ./voice
+ENV TERRASYNC_DATABASE_PATH=/data/terrasync.db
+RUN mkdir -p /data && python -m voice.agent download-files
+CMD ["python", "-m", "voice.agent", "start"]
