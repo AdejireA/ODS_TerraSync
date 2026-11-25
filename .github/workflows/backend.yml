@@ -41,6 +41,23 @@ jobs:
           printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Write voice credentials (if configured)
+        env:
+          NOBUS_HOST: ${{ secrets.NOBUS_HOST }}
+          LIVEKIT_URL: ${{ secrets.LIVEKIT_URL }}
+          LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+          SPITCH_API_KEY: ${{ secrets.SPITCH_API_KEY }}
+          TERRASYNC_VOICE_LANGUAGE: ${{ vars.TERRASYNC_VOICE_LANGUAGE || 'yo' }}
+        run: |
+          if [ -z "$LIVEKIT_URL" ] || [ -z "$LIVEKIT_API_KEY" ] || [ -z "$LIVEKIT_API_SECRET" ] || [ -z "$SPITCH_API_KEY" ]; then
+            echo "Voice secrets not set in GitHub; keeping any existing voice.env on the server."
+            exit 0
+          fi
+          printf 'LIVEKIT_URL=%s\nLIVEKIT_API_KEY=%s\nLIVEKIT_API_SECRET=%s\nSPITCH_API_KEY=%s\nTERRASYNC_VOICE_LANGUAGE=%s\n' \
+            "$LIVEKIT_URL" "$LIVEKIT_API_KEY" "$LIVEKIT_API_SECRET" "$SPITCH_API_KEY" "$TERRASYNC_VOICE_LANGUAGE" \
+            | ssh -o StrictHostKeyChecking=yes "ubuntu@$NOBUS_HOST" \
+              'sudo mkdir -p /opt/terrasync/data && sudo chown ubuntu:ubuntu /opt/terrasync/data && umask 077 && cat > /opt/terrasync/data/voice.env'
       - name: Deploy backend
         env:
           NOBUS_HOST: ${{ secrets.NOBUS_HOST }}
