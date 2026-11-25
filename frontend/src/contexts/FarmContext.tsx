@@ -1,4 +1,6 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useAuth } from "./AuthContext";
+import { getAuthToken } from "../lib/api";
 import {
   FARM_PROFILE_VERSION,
   isLegacyFarmProfile,
@@ -53,18 +55,47 @@ function persist(profile: FarmProfile | null) {
 }
 
 export function FarmProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfileState] = useState<FarmProfile | null>(readStoredProfile);
+  const { user } = useAuth();
+  return <FarmProviderForUser key={user?.id ?? "guest"} userId={user?.role === "farmer" ? user.id : null}>{children}</FarmProviderForUser>;
+}
+
+function FarmProviderForUser({ children, userId }: { children: ReactNode; userId: string | null }) {
+  const [profile, setProfileState] = useState<FarmProfile | null>(() => userId || getAuthToken() ? null : readStoredProfile());
+  const [ready, setReady] = useState(!userId);
+  const [error, setError] = useState("");
+  const queue = useRef(Promise.resolve());
+
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    const token = getAuthToken();
+    fetch('/api/v1/farms/profile', { headers: { Authorization: `Bearer ${token}` } })
+      .then((response) => { if (!response.ok) throw new Error('Unable to load your farm profile.'); return response.json(); })
+      .then((data) => { if (active) { setProfileState(data.profile); setReady(true); } })
+      .catch(() => { if (active) setError('Unable to load your farm profile. Please refresh and try again.'); });
+    return () => { active = false; };
+  }, [userId]);
+
+  function save(next: FarmProfile | null) {
+    if (!userId) { persist(next); return; }
+    const token = getAuthToken();
+    queue.current = queue.current.catch(() => {}).then(async () => {
+      const response = await fetch('/api/v1/farms/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ profile: next }) });
+      if (!response.ok) throw new Error('Save failed');
+      setError('');
+    }).catch(() => { setError('Your farm changes could not be saved. Please try again.'); });
+  }
 
   const setProfile = (next: FarmProfile) => {
     setProfileState(next);
-    persist(next);
+    save(next);
   };
 
   const updateProfile = (patch: Partial<Omit<FarmProfile, "version" | "crops">>) => {
     setProfileState((current) => {
       if (!current) return current;
       const next = { ...current, ...patch };
-      persist(next);
+      save(next);
       return next;
     });
   };
@@ -73,7 +104,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     setProfileState((current) => {
       if (!current) return current;
       const next = { ...current, crops: [...current.crops, { ...crop, id: generateId(crop.cropId) }] };
-      persist(next);
+      save(next);
       return next;
     });
   };
@@ -85,7 +116,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
         ...current,
         crops: current.crops.map((crop) => (crop.id === id ? { ...crop, ...patch } : crop)),
       };
-      persist(next);
+      save(next);
       return next;
     });
   };
@@ -94,14 +125,14 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     setProfileState((current) => {
       if (!current) return current;
       const next = { ...current, crops: current.crops.filter((crop) => crop.id !== id) };
-      persist(next);
+      save(next);
       return next;
     });
   };
 
   const clearProfile = () => {
     setProfileState(null);
-    persist(null);
+    save(null);
   };
 
   const value = useMemo(
@@ -109,7 +140,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     [profile],
   );
 
-  return <FarmContext.Provider value={value}>{children}</FarmContext.Provider>;
+  return <FarmContext.Provider value={value}>{error && <div role="alert">{error}</div>}{ready ? children : !error && <div>Loading your farm profile…</div>}</FarmContext.Provider>;
 }
 
 export function useFarm() {
