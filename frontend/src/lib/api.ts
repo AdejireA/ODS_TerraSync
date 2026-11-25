@@ -191,7 +191,7 @@ export function getFarm(farmId: string) {
 export interface InsightItem {
   rule_id: string;
   crop: string;
-  category: "crop_care" | "harvest" | "post_harvest" | "weather";
+  category: "planting" | "crop_care" | "harvest" | "post_harvest" | "weather" | "market";
   priority: number;
   urgency: "high" | "medium" | "low";
   title: string;

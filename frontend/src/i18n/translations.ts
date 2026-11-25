@@ -295,10 +295,12 @@ export const translations = {
     knowledgeSearchPlaceholder: "Search guidance, e.g. pests, harvest",
     knowledgeEmpty: "No guidance matched your search.",
     knowledgeCategoryAll: "All categories",
+    knowledgeCategoryPlanting: "Planting",
     knowledgeCategoryCropCare: "Crop care",
     knowledgeCategoryHarvest: "Harvest",
     knowledgeCategoryPostHarvest: "Post-harvest",
     knowledgeCategoryWeather: "Weather",
+    knowledgeCategoryMarket: "Market",
 
     // Harvest report enhancements
     reportConsent: "I agree to share my contact details with produce coordinators",
@@ -587,10 +589,12 @@ export const translations = {
     knowledgeSearchPlaceholder: "Wá ìmọ̀ràn, f.a. kòkòrò, ìkórè",
     knowledgeEmpty: "Kò sí ìmọ̀ràn tó bá ìwádìí rẹ mu.",
     knowledgeCategoryAll: "Gbogbo ẹ̀ka",
+    knowledgeCategoryPlanting: "Gbígbìn",
     knowledgeCategoryCropCare: "Ìtọ́jú ohun ọ̀gbìn",
     knowledgeCategoryHarvest: "Ìkórè",
     knowledgeCategoryPostHarvest: "Lẹ́yìn ìkórè",
     knowledgeCategoryWeather: "Ojú ọjọ́",
+    knowledgeCategoryMarket: "Ọjà",
 
     reportConsent: "Mo gbà láti fi àlàyé ìbánisọ̀rọ̀ mi fún àwọn olùṣàkóso ọjà",
     reportStatus: "Ipò",

@@ -7,15 +7,17 @@ import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { ErrorState, LoadingState, EmptyState } from "../components/ui/StatusStates";
 
-type Category = "crop_care" | "harvest" | "post_harvest" | "weather";
+type Category = "planting" | "crop_care" | "harvest" | "post_harvest" | "weather" | "market";
 type LoadState = "idle" | "loading" | "ready" | "error";
 
 const CATEGORIES: { value: Category | ""; key: string }[] = [
   { value: "", key: "knowledgeCategoryAll" },
+  { value: "planting", key: "knowledgeCategoryPlanting" },
   { value: "crop_care", key: "knowledgeCategoryCropCare" },
   { value: "harvest", key: "knowledgeCategoryHarvest" },
   { value: "post_harvest", key: "knowledgeCategoryPostHarvest" },
   { value: "weather", key: "knowledgeCategoryWeather" },
+  { value: "market", key: "knowledgeCategoryMarket" },
 ];
 
 export function Knowledge() {
