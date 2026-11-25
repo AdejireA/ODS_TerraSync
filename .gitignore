@@ -33,3 +33,17 @@ build/
 *.sqlite3-journal
 *.db-wal
 *.db-shm
+backend/.venv/
+backend/*.db
+backend/__pycache__/
+backend/**/__pycache__/
+CLAUDE.md
+TERRASYNC_DEVELOPMENT_PLAN.md
+
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.venv/
+.vscode/

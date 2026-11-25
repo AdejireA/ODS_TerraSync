@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@theme {
+  --font-sans: "Manrope", system-ui, sans-serif;
+
+  --color-background: hsl(45 44% 96%); /* #FAF8F2 */
+  --color-foreground: hsl(153 15% 15%); /* #202B26 */
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(153 15% 15%);
+  --color-primary: hsl(161 54% 15%); /* #123C2F */
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-primary-light: hsl(144 26% 92%); /* #E4EFE7 */
+  --color-secondary: hsl(178 94% 20%); /* #036561 */
+  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-muted: hsl(86 23% 94%); /* #F0F3EC */
+  --color-muted-foreground: hsl(148 10% 32%); /* #4A5B51 */
+  --color-accent: hsl(110 52% 43%); /* #48A635 */
+  --color-accent-foreground: hsl(129 39% 13%);
+  --color-accent-light: hsl(97 39% 94%); /* #EDF5E8 */
+  --color-destructive: hsl(4 76% 40%); /* #B42318 */
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-destructive-surface: hsl(12 83% 95%);
+  --color-success: hsl(158 79% 30%); /* #10885B */
+  --color-success-foreground: hsl(0 0% 0%);
+  --color-success-surface: hsl(145 33% 93%);
+  --color-warning: hsl(40 100% 29%); /* #946200 */
+  --color-warning-foreground: hsl(0 0% 100%);
+  --color-warning-surface: hsl(44 100% 92%);
+  --color-border: hsl(107 14% 84%); /* #D4DCD2 */
+  --color-input: hsl(137 6% 51%);
+  --color-ring: hsl(178 94% 20%);
+
+  --radius-lg: 0.75rem;
+  --radius-md: 0.5rem;
+
+  --spacing-page: 1rem;
+  --spacing-section: 1.5rem;
+  --spacing-field: 1rem;
+  --spacing-row: 0.75rem;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 3px;
+}
+
+.app-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 32rem;
+  padding-inline: var(--spacing-page);
+}
+
+.text-page-title { font-size: 1.5rem; font-weight: 700; line-height: 1.2; }
+.text-section-heading { font-size: 1.125rem; font-weight: 600; line-height: 1.35; }
+.text-metadata { font-size: 0.75rem; font-weight: 500; color: var(--color-muted-foreground); }
+.text-reading { font-size: 1rem; line-height: 1.6; }
