@@ -13,6 +13,23 @@ release="$root/releases/$(date -u +%Y%m%d%H%M%S)-$$"
 site=/etc/nginx/sites-available/terrasync
 enabled=/etc/nginx/sites-enabled/terrasync
 
+# Refuse to take over port 80/443 from another service; report who owns it instead.
+for port in 80 443; do
+    owner=$(sudo ss -ltnpH "( sport = :$port )" 2>/dev/null | grep -v '"nginx"' || true)
+    if [ -n "$owner" ]; then
+        echo "ERROR: port $port is already used by another service:" >&2
+        echo "$owner" >&2
+        for pid in $(echo "$owner" | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u); do
+            ps -o pid=,user=,cmd= -p "$pid" >&2 || true
+            systemctl status "$pid" --no-pager 2>/dev/null | head -n 3 >&2 || true
+        done
+        if command -v docker >/dev/null 2>&1; then sudo docker ps --format '{{.Names}} {{.Image}} {{.Ports}}' >&2 || true; fi
+        # A previous failed run may have left nginx installed but stopped; keep it from retrying.
+        if ! systemctl is-active --quiet nginx 2>/dev/null; then sudo systemctl disable nginx >/dev/null 2>&1 || true; fi
+        exit 1
+    fi
+done
+
 sudo mkdir -p "$root/releases"
 sudo chown ubuntu:ubuntu /opt/terrasync "$root" "$root/releases" 2>/dev/null || sudo chown ubuntu:ubuntu "$root" "$root/releases"
 mkdir -p "$release"
@@ -116,6 +133,7 @@ rollback() {
     sudo nginx -t >/dev/null 2>&1 && sudo systemctl reload nginx || true
 }
 
+trap 'rollback' ERR
 sudo cp "$new_site" "$site"
 sudo ln -sfn "$site" "$enabled"
 # The stock Ubuntu default site also claims default_server on port 80.
@@ -132,7 +150,8 @@ if ! sudo nginx -t; then
     exit 1
 fi
 sudo systemctl enable nginx >/dev/null
-sudo systemctl reload nginx || sudo systemctl restart nginx
+sudo systemctl reload nginx 2>/dev/null || sudo systemctl restart nginx
+trap - ERR
 
 scheme=http
 [ -n "$cert_dir" ] && scheme=https
