@@ -34,6 +34,11 @@ def initialize():
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
 
+        db.execute("""CREATE TABLE IF NOT EXISTS user_farm_profiles (
+            user_id TEXT PRIMARY KEY REFERENCES users(id),
+            profile TEXT NOT NULL
+        )""")
+
         db.execute("""CREATE TABLE IF NOT EXISTS harvest_reports (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             crop TEXT NOT NULL, quantity REAL NOT NULL, unit TEXT NOT NULL,
