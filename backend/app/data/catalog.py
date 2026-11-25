@@ -1,7 +1,7 @@
 """Reference data shared by the API and the voice agent.
 
-LGA lists match frontend/src/data/locations.ts. Coordinates are state capitals and
-are only used as an approximate weather location until LGA coordinates are added.
+LGA lists match frontend/src/data/locations.ts. Weather falls back to the state
+capital's coordinates only when an LGA has no entry in LGA_COORDINATES below.
 """
 
 CROPS = {
@@ -59,6 +59,43 @@ STATES = {
         ],
     },
 }
+
+# Approximate coordinates for each LGA's headquarters town, used so weather is
+# local to the farmer's LGA instead of always the state capital. Sourced from
+# public references (e.g. Wikipedia LGA pages); treat as approximate town
+# centres, not farm-exact. Only Ogun (the active pilot state) is populated;
+# other states fall back to their state-capital coordinates until needed.
+LGA_COORDINATES = {
+    "Ogun": {
+        "Abeokuta North": {"name": "Akomoje", "lat": 7.2000, "lon": 3.2000},
+        "Abeokuta South": {"name": "Abeokuta", "lat": 7.1500, "lon": 3.3500},
+        "Ado-Odo/Ota": {"name": "Ota", "lat": 6.6330, "lon": 3.1000},
+        "Egbado North (Yewa North)": {"name": "Ayetoro", "lat": 7.2333, "lon": 3.0333},
+        "Egbado South (Yewa South)": {"name": "Ilaro", "lat": 6.8830, "lon": 3.0170},
+        "Ewekoro": {"name": "Itori", "lat": 6.9333, "lon": 3.2167},
+        "Ifo": {"name": "Ifo", "lat": 6.8170, "lon": 3.2000},
+        "Ijebu East": {"name": "Ogbere", "lat": 6.7330, "lon": 4.1670},
+        "Ijebu North": {"name": "Ijebu Igbo", "lat": 6.9500, "lon": 4.0000},
+        "Ijebu North East": {"name": "Atan", "lat": 6.9000, "lon": 4.0170},
+        "Ijebu Ode": {"name": "Ijebu-Ode", "lat": 6.8208, "lon": 3.9208},
+        "Ikenne": {"name": "Ikenne", "lat": 6.8670, "lon": 3.7170},
+        "Imeko Afon": {"name": "Imeko", "lat": 7.4833, "lon": 2.8833},
+        "Ipokia": {"name": "Ipokia", "lat": 6.5330, "lon": 2.8500},
+        "Obafemi Owode": {"name": "Owode-Egba", "lat": 6.9500, "lon": 3.5000},
+        "Odeda": {"name": "Odeda", "lat": 7.2319, "lon": 3.5272},
+        "Odogbolu": {"name": "Odogbolu", "lat": 6.7670, "lon": 3.8000},
+        "Ogun Waterside": {"name": "Abigi", "lat": 6.4830, "lon": 4.4000},
+        "Remo North": {"name": "Isara", "lat": 7.0000, "lon": 3.6830},
+        "Sagamu": {"name": "Sagamu", "lat": 6.8330, "lon": 3.6500},
+    },
+}
+
+
+def lga_coordinates(state: str, lga: str | None) -> dict | None:
+    """LGA-level {name, lat, lon}, or None to fall back to the state capital."""
+    if not lga:
+        return None
+    return LGA_COORDINATES.get(state, {}).get(lga)
 
 
 def active_states() -> list[str]:

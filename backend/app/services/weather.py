@@ -1,7 +1,8 @@
 """Weather observations from Open-Meteo (no API key). Never fabricated.
 
-The location is the state capital until LGA coordinates are added, and every
-response says so. On any failure the service returns `available: false`.
+The location is the LGA headquarters town when LGA_COORDINATES has an entry
+for it, otherwise the state capital; every response says which. On any
+failure the service returns `available: false`.
 """
 import json
 import threading
@@ -11,10 +12,10 @@ import urllib.request
 from datetime import datetime, timezone
 
 from app.core.config import env_bool, env_int
-from app.data.catalog import STATES, normalize_state
+from app.data.catalog import STATES, lga_coordinates, normalize_state
 
 PROVIDER = "Open-Meteo"
-_cache: dict[str, tuple[float, dict]] = {}
+_cache: dict[tuple[str, str | None], tuple[float, dict]] = {}
 _lock = threading.Lock()
 
 
@@ -33,22 +34,27 @@ def _fetch(lat: float, lon: float) -> dict:
 def get_weather(state: str, lga: str | None = None) -> dict:
     state = normalize_state(state)
     info = STATES[state]
-    base = {
-        "provider": PROVIDER, "state": state, "lga": lga,
-        "location": {"name": info["capital"], "lat": info["lat"], "lon": info["lon"],
-                     "resolution": "state_capital",
-                     "note": f"Approximate: forecast for {info['capital']}, not your exact farm."},
-    }
+    lga_point = lga_coordinates(state, lga)
+    if lga_point:
+        location = {"name": lga_point["name"], "lat": lga_point["lat"], "lon": lga_point["lon"],
+                    "resolution": "lga",
+                    "note": f"Approximate: forecast for {lga_point['name']} ({lga} LGA headquarters), not your exact farm."}
+    else:
+        location = {"name": info["capital"], "lat": info["lat"], "lon": info["lon"],
+                    "resolution": "state_capital",
+                    "note": f"Approximate: forecast for {info['capital']}, not your exact farm."}
+    base = {"provider": PROVIDER, "state": state, "lga": lga, "location": location}
     if not env_bool("TERRASYNC_WEATHER_ENABLED", True):
         return {**base, "available": False, "reason": "Weather is disabled on this server"}
 
+    cache_key = (state, lga if lga_point else None)
     with _lock:
-        cached = _cache.get(state)
+        cached = _cache.get(cache_key)
     if cached and time.time() - cached[0] < env_int("TERRASYNC_WEATHER_CACHE_SECONDS", 1800):
         return {**base, **cached[1]}
 
     try:
-        raw = _fetch(info["lat"], info["lon"])
+        raw = _fetch(location["lat"], location["lon"])
         daily = raw["daily"]
         result = {
             "available": True,
@@ -71,7 +77,7 @@ def get_weather(state: str, lga: str | None = None) -> dict:
         return {**base, "available": False, "reason": f"Weather provider unavailable ({type(exc).__name__})"}
 
     with _lock:
-        _cache[state] = (time.time(), result)
+        _cache[cache_key] = (time.time(), result)
     return {**base, **result}
 
 
