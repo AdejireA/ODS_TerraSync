@@ -3,11 +3,11 @@
 // to true only once the corresponding Feranmi-owned endpoint is confirmed working.
 export const FEATURES = {
   harvestReports: true,
-  dailyInsights: false,
-  weather: false,
+  dailyInsights: true,
+  weather: true,
   farmTasks: false,
   cropAdvisory: true,
-  voiceCall: false,
+  voiceCall: true,
 } as const;
 
 export type FeatureName = keyof typeof FEATURES;
