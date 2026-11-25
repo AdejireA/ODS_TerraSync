@@ -182,7 +182,7 @@ export function getFarm(farmId: string) {
 export interface InsightItem {
   rule_id: string;
   crop: string;
-  category: "crop_care" | "harvest" | "post_harvest" | "weather";
+  category: "planting" | "crop_care" | "harvest" | "post_harvest" | "weather" | "market";
   priority: number;
   urgency: "high" | "medium" | "low";
   title: string;
@@ -192,8 +192,8 @@ export interface InsightItem {
   evidence: { source_title: string; source_url: string; source_verified: boolean };
   review_status: string;
   uncertainty: string;
-  contraindications: string;
-  escalation: string;
+  contraindications: string | null;
+  escalation: string | null;
   region_level: string;
   language: string;
 }
