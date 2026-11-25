@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { CloudSun, Lightbulb, ListChecks, Mic, Pencil, Sprout, Truck, Wheat } from "lucide-react";
+import { Lightbulb, ListChecks, Mic, Pencil, Sprout, Truck, Wheat } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFarm } from "../contexts/FarmContext";
 import { cropImage, cropName } from "../data/crops";
@@ -10,6 +10,9 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { StatCard } from "../components/ui/StatCard";
 import { FeatureCard } from "../components/ui/FeatureCard";
+import { InsightsPanel } from "../components/dashboard/InsightsPanel";
+import { WeatherPanel } from "../components/dashboard/WeatherPanel";
+import { FEATURES } from "../lib/featureFlags";
 import { NotAvailableState } from "../components/ui/StatusStates";
 
 export function Dashboard() {
@@ -69,7 +72,9 @@ export function Dashboard() {
             <Button variant="secondary" onClick={() => navigate("/voice")}>
               {t("voiceStart")}
             </Button>
-            <span className="text-xs text-primary-foreground/70">{t("voiceComingSoon")}</span>
+            {!FEATURES.voiceCall && (
+              <span className="text-xs text-primary-foreground/70">{t("voiceComingSoon")}</span>
+            )}
           </div>
         </Card>
 
@@ -84,20 +89,21 @@ export function Dashboard() {
         {/* Today's Insights */}
         <section className="space-y-row">
           <SectionHeader title={t("dashboardTodayInsights")} />
-          <NotAvailableState label={t("notAvailableInsights")}>
-            <Lightbulb className="mt-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-          </NotAvailableState>
+          {FEATURES.dailyInsights ? (
+            <InsightsPanel profile={profile} />
+          ) : (
+            <NotAvailableState label={t("notAvailableInsights")} />
+          )}
         </section>
 
         {/* Weather Intelligence */}
         <section className="space-y-row">
           <SectionHeader title={t("dashboardWeather")} />
-          <NotAvailableState label={t("notAvailableWeather")}>
-            <span className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <CloudSun className="h-3.5 w-3.5" aria-hidden="true" />
-              {profile.lga}, {profile.state}
-            </span>
-          </NotAvailableState>
+          {FEATURES.weather ? (
+            <WeatherPanel state={profile.state} lga={profile.lga} />
+          ) : (
+            <NotAvailableState label={t("notAvailableWeather")} />
+          )}
         </section>
       </div>
 
