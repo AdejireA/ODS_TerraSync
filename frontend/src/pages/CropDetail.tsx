@@ -10,6 +10,7 @@ import { Card } from "../components/ui/Card";
 import { PageHeader } from "../components/ui/PageHeader";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { ErrorState, LoadingState, NotAvailableState } from "../components/ui/StatusStates";
+import { HarvestReadiness } from "../components/HarvestReadiness";
 
 export function CropDetail() {
   const { cropId = "" } = useParams();
@@ -74,6 +75,15 @@ export function CropDetail() {
               </p>
             )}
           </Card>
+        ) : (
+          <NotAvailableState label={t("cropDetailNoRecord")} />
+        )}
+      </section>
+
+      <section className="space-y-row">
+        <SectionHeader title={t("harvestReadinessTitle")} />
+        {profile && record ? (
+          <HarvestReadiness profile={profile} crop={record} />
         ) : (
           <NotAvailableState label={t("cropDetailNoRecord")} />
         )}
