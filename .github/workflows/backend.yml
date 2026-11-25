@@ -24,7 +24,7 @@ jobs:
         working-directory: backend
         env:
           TERRASYNC_DATABASE_PATH: /tmp/terrasync-ci.db
-        run: python deploy/smoke_test.py
+        run: python -m deploy.smoke_test
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: test
