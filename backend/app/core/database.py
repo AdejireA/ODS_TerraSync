@@ -35,3 +35,7 @@ def initialize():
             report_id INTEGER PRIMARY KEY REFERENCES harvest_reports(id),
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
+        db.execute("""CREATE TABLE IF NOT EXISTS harvest_drafts (
+            id TEXT PRIMARY KEY, payload TEXT NOT NULL,
+            report_id INTEGER REFERENCES harvest_reports(id)
+        )""")

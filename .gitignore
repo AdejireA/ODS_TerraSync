@@ -4,3 +4,11 @@ backend/.venv/
 backend/*.db
 backend/__pycache__/
 backend/**/__pycache__/
+
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.venv/
+.vscode/
