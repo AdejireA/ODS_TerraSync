@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFarm } from "../contexts/FarmContext";
-import { cropName } from "../data/crops";
+import { cropImage, cropName } from "../data/crops";
 import { areaUnitKey, datePrecisionKey, plantingStatusKey } from "../data/farmOptions";
 import { getGuidance, type GuidanceItem } from "../lib/api";
 import { FEATURES } from "../lib/featureFlags";
@@ -45,6 +45,12 @@ export function CropDetail() {
       <Link to="/dashboard" className="text-sm font-medium text-primary underline">
         ← {t("cropDetailBack")}
       </Link>
+
+      <img
+        src={cropImage(cropId)}
+        alt=""
+        className="h-40 w-full rounded-lg object-cover sm:h-56"
+      />
 
       <PageHeader title={cropName(cropId, language)} />
 

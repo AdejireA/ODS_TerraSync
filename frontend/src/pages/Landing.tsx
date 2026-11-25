@@ -23,6 +23,12 @@ export function Landing() {
         <LanguageToggle />
       </div>
 
+      <img
+        src="/images/hero/farmland.jpg"
+        alt=""
+        className="h-36 w-full rounded-lg object-cover sm:h-48"
+      />
+
       <div className="space-y-2 text-center">
         <p className="text-sm font-semibold uppercase tracking-wide text-secondary">
           {t("appTitle")}

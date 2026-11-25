@@ -15,11 +15,13 @@ export function Voice() {
   return (
     <div className="shell-container space-y-section py-section">
       <div className="mx-auto max-w-xl space-y-field">
-        <Card className="space-y-4 bg-primary text-center text-primary-foreground">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/15">
+        <Card className="relative space-y-4 overflow-hidden text-center text-primary-foreground">
+          <img src="/images/hero/voice.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-primary/85" />
+          <div className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/15">
             <Mic className="h-7 w-7" aria-hidden="true" />
           </div>
-          <div>
+          <div className="relative">
             <h2 className="text-page-title">{t("voiceTitle")}</h2>
             <p className="mt-1 text-sm text-primary-foreground/80">{t("voiceSubtitle")}</p>
             <p className="mt-2 text-xs text-primary-foreground/70">{t("voiceOgunNotice")}</p>

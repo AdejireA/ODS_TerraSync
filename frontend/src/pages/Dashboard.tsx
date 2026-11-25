@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { CloudSun, Lightbulb, ListChecks, Mic, Pencil, Sprout, Truck, Wheat } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFarm } from "../contexts/FarmContext";
-import { cropName } from "../data/crops";
+import { cropImage, cropName } from "../data/crops";
 import { plantingStatusKey } from "../data/farmOptions";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -45,9 +45,15 @@ export function Dashboard() {
       <div className="grid gap-section lg:grid-cols-3">
         {/* Voice Intelligence hero */}
         <Card
-          className="col-span-1 flex flex-col justify-between gap-4 bg-primary text-primary-foreground lg:col-span-2"
+          className="relative col-span-1 flex flex-col justify-between gap-4 overflow-hidden text-primary-foreground lg:col-span-2"
         >
-          <div className="flex items-start justify-between gap-3">
+          <img
+            src="/images/hero/voice.jpg"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-primary/85" />
+          <div className="relative flex items-start justify-between gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
               <Mic className="h-6 w-6" aria-hidden="true" />
             </div>
@@ -55,11 +61,11 @@ export function Dashboard() {
               EN · Yorùbá
             </span>
           </div>
-          <div>
+          <div className="relative">
             <p className="text-lg font-bold">{t("dashboardTalkToTerraSync")}</p>
             <p className="mt-1 text-sm text-primary-foreground/80">{t("voiceSubtitle")}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex flex-wrap items-center gap-3">
             <Button variant="secondary" onClick={() => navigate("/voice")}>
               {t("voiceStart")}
             </Button>
@@ -106,12 +112,17 @@ export function Dashboard() {
               onClick={() => navigate(`/crops/${crop.cropId}`)}
               className="text-left"
             >
-              <Card className="flex h-full flex-col gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary-light text-primary">
-                  <Sprout className="h-4 w-4" aria-hidden="true" />
+              <Card className="flex h-full flex-col gap-2 overflow-hidden !p-0">
+                <img
+                  src={cropImage(crop.cropId)}
+                  alt=""
+                  className="h-24 w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="space-y-1 p-3 pt-0">
+                  <p className="text-sm font-medium">{cropName(crop.cropId, language)}</p>
+                  <p className="text-metadata">{t(plantingStatusKey(crop.status))}</p>
                 </div>
-                <p className="text-sm font-medium">{cropName(crop.cropId, language)}</p>
-                <p className="text-metadata">{t(plantingStatusKey(crop.status))}</p>
               </Card>
             </button>
           ))}

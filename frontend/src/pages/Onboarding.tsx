@@ -324,13 +324,19 @@ export function Onboarding() {
                   key={option.id}
                   type="button"
                   onClick={() => toggleCrop(option.id)}
-                  className={`rounded-md border p-3 text-left ${
+                  className={`overflow-hidden rounded-md border text-left ${
                     selected
                       ? "border-primary bg-primary-light"
                       : "border-border bg-card"
                   }`}
                 >
-                  <span className="text-sm font-medium">{cropName(option.id, language)}</span>
+                  <img
+                    src={option.image}
+                    alt=""
+                    className="h-20 w-full object-cover"
+                    loading="lazy"
+                  />
+                  <span className="block p-2 text-sm font-medium">{cropName(option.id, language)}</span>
                 </button>
               );
             })}
