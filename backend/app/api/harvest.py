@@ -26,5 +26,14 @@ def create_report(report: HarvestReport):
 @router.get("")
 def list_reports():
     with connection() as db:
-        rows = db.execute("SELECT id, crop, quantity, unit, state, lga, available_date, created_at FROM harvest_reports ORDER BY id DESC").fetchall()
+        rows = db.execute("SELECT h.id, h.crop, h.quantity, h.unit, h.state, h.lga, h.available_date, h.created_at, EXISTS(SELECT 1 FROM harvest_interest i WHERE i.report_id = h.id) AS interested FROM harvest_reports h ORDER BY h.id DESC").fetchall()
         return [dict(row) for row in rows]
+
+
+@router.post("/{report_id}/interest")
+def mark_interest(report_id: int):
+    with connection() as db:
+        if db.execute("SELECT 1 FROM harvest_reports WHERE id = ?", (report_id,)).fetchone() is None:
+            raise HTTPException(status_code=404, detail="Harvest report not found")
+        db.execute("INSERT OR IGNORE INTO harvest_interest (report_id) VALUES (?)", (report_id,))
+    return {"id": report_id, "interested": True}

@@ -25,3 +25,17 @@ def initialize():
             state TEXT NOT NULL, lga TEXT NOT NULL, available_date TEXT NOT NULL,
             contact TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
+
+        db.execute("""CREATE TABLE IF NOT EXISTS guidance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, crop TEXT NOT NULL,
+            language TEXT NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL,
+            source_url TEXT NOT NULL, reviewed INTEGER NOT NULL DEFAULT 0
+        )""")
+        db.execute("""CREATE TABLE IF NOT EXISTS harvest_interest (
+            report_id INTEGER PRIMARY KEY REFERENCES harvest_reports(id),
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )""")
+        db.execute("""CREATE TABLE IF NOT EXISTS harvest_drafts (
+            id TEXT PRIMARY KEY, payload TEXT NOT NULL,
+            report_id INTEGER REFERENCES harvest_reports(id)
+        )""")
