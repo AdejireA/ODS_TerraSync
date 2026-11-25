@@ -1,0 +1,183 @@
+export type Language = "en" | "yo";
+
+export const STATES = ["Ogun", "Ondo", "Osun", "Lagos"] as const;
+
+export const CROPS = ["Maize", "Cassava", "Tomato", "Pepper", "Yam", "Groundnut"] as const;
+
+export const UNITS = ["bags", "kg", "tons", "baskets"] as const;
+
+export const translations = {
+  en: {
+    appTitle: "TerraSync",
+    tagline: "Report and track harvests across Southwest Nigeria",
+
+    // Landing
+    landingHeadline: "What needs your attention today?",
+    landingSubheadline:
+      "TerraSync helps smallholder farmers in Southwest Nigeria make timely farming decisions and connect upcoming harvests with buyers.",
+    landingCtaPrimary: "Set up my farm",
+    landingCtaSecondary: "I already set up my farm",
+    landingPillarFarmTitle: "Farm intelligence",
+    landingPillarFarmBody: "Crop tracking, daily insights and weather-aware guidance.",
+    landingPillarVoiceTitle: "Voice intelligence",
+    landingPillarVoiceBody: "Talk to TerraSync in English or Yorùbá.",
+    landingPillarSupplyTitle: "Supply intelligence",
+    landingPillarSupplyBody: "Report upcoming harvests and discover produce nearby.",
+
+    // Onboarding
+    onboardingStepLocation: "Farm location",
+    onboardingStepCrops: "Your crops",
+    onboardingFarmName: "Farm name",
+    onboardingFarmNamePlaceholder: "e.g. Baba Tunde's Farm",
+    onboardingContinue: "Continue",
+    onboardingBack: "Back",
+    onboardingFinish: "Go to my dashboard",
+    onboardingSelectCrops: "Select the crops you grow",
+    onboardingSelectAtLeastOneCrop: "Select at least one crop to continue.",
+
+    // Dashboard
+    dashboardGreeting: "Welcome back",
+    dashboardTalkToTerraSync: "Talk to TerraSync",
+    dashboardTodayInsights: "Today's insights",
+    dashboardWeather: "Weather",
+    dashboardMyCrops: "My crops",
+    dashboardUpcomingHarvests: "Upcoming harvests",
+    dashboardFarmTasks: "Farm tasks",
+    dashboardProduceAvailability: "Produce availability",
+    dashboardNoProfile: "Set up your farm to see your personalised dashboard.",
+    dashboardSetUpFarm: "Set up my farm",
+    deviceLocalNotice: "Saved on this device only — not yet synced to an account.",
+
+    notAvailableInsights: "Daily insights are not connected yet. This will show what needs your attention today.",
+    notAvailableWeather: "Weather data is not connected yet.",
+    notAvailableTasks: "Farm tasks are not connected yet.",
+    notAvailableCropAdvisory: "Crop advisory content is not connected yet.",
+
+    // Nav
+    navHome: "Home",
+    navReport: "Report harvest",
+    navBoard: "Produce board",
+    navVoice: "Talk",
+
+    // Harvest report form
+    reportFormTitle: "Report an upcoming harvest",
+    crop: "Crop",
+    quantity: "Quantity",
+    unit: "Unit",
+    state: "State",
+    lga: "LGA",
+    availableDate: "Available from",
+    contact: "Contact (phone or name)",
+    submit: "Submit report",
+    submitting: "Submitting...",
+    submitSuccess: "Harvest report submitted. It now appears on the produce board.",
+    submitError: "Could not submit this report. Please try again.",
+    selectCrop: "Select a crop",
+    selectUnit: "Select a unit",
+    selectState: "Select a state",
+    selectLga: "Select an LGA",
+    lgaPlaceholder: "e.g. Odeda",
+    contactPlaceholder: "e.g. 080xxxxxxx",
+
+    // Produce board
+    boardTitle: "Upcoming harvests",
+    boardEmpty: "No harvest reports yet.",
+    boardLoading: "Loading reports...",
+    boardError: "Could not load the produce board.",
+    reportedOn: "Reported",
+    locationLabel: "Location",
+    availableFromLabel: "Available from",
+
+    // Voice
+    voiceTitle: "Talk to TerraSync",
+    voiceSubtitle: "Ask a farming question or report a harvest by voice.",
+    voiceStart: "Start call",
+    voiceEnd: "End call",
+    voiceComingSoon: "Voice calling is not connected yet. This page will host the LiveKit voice assistant once the backend voice service is ready.",
+    voiceLanguageLabel: "Spoken language",
+  },
+  yo: {
+    appTitle: "TerraSync",
+    tagline: "Ròyìn àti tọpinpin ìkórè ní Gúúsù-Ìwọ̀-Oòrùn Nàìjíríà",
+
+    landingHeadline: "Kí ni ó yẹ kó gba àfiyèsí rẹ lónìí?",
+    landingSubheadline:
+      "TerraSync ń ran àwọn àgbẹ̀ kékèké lọ́wọ́ ní Gúúsù-Ìwọ̀-Oòrùn Nàìjíríà láti ṣe ìpinnu oko tó yẹ, kí wọ́n sì so ìkórè tó ń bọ̀ pọ̀ mọ́ àwọn tó fẹ́ rà.",
+    landingCtaPrimary: "Ṣètò oko mi",
+    landingCtaSecondary: "Mo ti ṣètò oko mi",
+    landingPillarFarmTitle: "Ìmọ̀ oko",
+    landingPillarFarmBody: "Ìtọpinpin ohun ọ̀gbìn, ìmọ̀ ojoojúmọ́ àti ìmọ̀ràn tó mọ̀ nípa ojú ọjọ́.",
+    landingPillarVoiceTitle: "Ìmọ̀ ohùn",
+    landingPillarVoiceBody: "Bá TerraSync sọ̀rọ̀ ní Èdè Gẹ̀ẹ́sì tàbí Yorùbá.",
+    landingPillarSupplyTitle: "Ìmọ̀ ọjà",
+    landingPillarSupplyBody: "Ròyìn ìkórè tó ń bọ̀ kí o sì wá ọjà nítòsí.",
+
+    onboardingStepLocation: "Ibùdó oko",
+    onboardingStepCrops: "Àwọn ohun ọ̀gbìn rẹ",
+    onboardingFarmName: "Orúkọ oko",
+    onboardingFarmNamePlaceholder: "f.a. Oko Bàbá Túndé",
+    onboardingContinue: "Tẹ̀síwájú",
+    onboardingBack: "Padà",
+    onboardingFinish: "Lọ sí pátákò mi",
+    onboardingSelectCrops: "Yan àwọn ohun ọ̀gbìn tí o ń gbìn",
+    onboardingSelectAtLeastOneCrop: "Yan ó kéré tán ohun ọ̀gbìn kan láti tẹ̀síwájú.",
+
+    dashboardGreeting: "Ẹ káàbọ̀ padà",
+    dashboardTalkToTerraSync: "Bá TerraSync sọ̀rọ̀",
+    dashboardTodayInsights: "Ìmọ̀ ojoojúmọ́",
+    dashboardWeather: "Ojú ọjọ́",
+    dashboardMyCrops: "Àwọn ohun ọ̀gbìn mi",
+    dashboardUpcomingHarvests: "Ìkórè tó ń bọ̀",
+    dashboardFarmTasks: "Iṣẹ́ oko",
+    dashboardProduceAvailability: "Ọjà tó wà",
+    dashboardNoProfile: "Ṣètò oko rẹ láti rí pátákò rẹ.",
+    dashboardSetUpFarm: "Ṣètò oko mi",
+    deviceLocalNotice: "A fi pamọ́ sórí ẹ̀rọ yìí nìkan — kò tí ì so pọ̀ mọ́ àkáǔntì.",
+
+    notAvailableInsights: "Ìmọ̀ ojoojúmọ́ kò tí ì so pọ̀. Èyí yóò fi ohun tó yẹ kó gba àfiyèsí rẹ hàn.",
+    notAvailableWeather: "Dátà ojú ọjọ́ kò tí ì so pọ̀.",
+    notAvailableTasks: "Iṣẹ́ oko kò tí ì so pọ̀.",
+    notAvailableCropAdvisory: "Àlàyé nípa ohun ọ̀gbìn kò tí ì so pọ̀.",
+
+    navHome: "Ilé",
+    navReport: "Ròyìn ìkórè",
+    navBoard: "Pátákò ọjà",
+    navVoice: "Sọ̀rọ̀",
+
+    reportFormTitle: "Ròyìn ìkórè tó ń bọ̀",
+    crop: "Ohun ọ̀gbìn",
+    quantity: "Iye",
+    unit: "Ìwọ̀n",
+    state: "Ìpínlẹ̀",
+    lga: "Ìjọba Ìbílẹ̀",
+    availableDate: "Yóò wà láti",
+    contact: "Ìbánisọ̀rọ̀ (fóònù tàbí orúkọ)",
+    submit: "Fi ìròyìn ránṣẹ́",
+    submitting: "Ń fi ránṣẹ́...",
+    submitSuccess: "Ìròyìn ìkórè ti fi ránṣẹ́. Yóò farahàn lórí pátákò ọjà.",
+    submitError: "A kò lè fi ìròyìn yìí ránṣẹ́. Jọ̀wọ́ túngbìyànjú.",
+    selectCrop: "Yan ohun ọ̀gbìn",
+    selectUnit: "Yan ìwọ̀n",
+    selectState: "Yan ìpínlẹ̀",
+    selectLga: "Yan ìjọba ìbílẹ̀",
+    lgaPlaceholder: "f.a. Odeda",
+    contactPlaceholder: "f.a. 080xxxxxxx",
+
+    boardTitle: "Àwọn ìkórè tó ń bọ̀",
+    boardEmpty: "Kò sí ìròyìn ìkórè kankan síbẹ̀.",
+    boardLoading: "Ń kó àwọn ìròyìn jọ...",
+    boardError: "A kò lè kó pátákò ọjà.",
+    reportedOn: "Ìròyìn ní",
+    locationLabel: "Ibùdó",
+    availableFromLabel: "Yóò wà láti",
+
+    voiceTitle: "Bá TerraSync sọ̀rọ̀",
+    voiceSubtitle: "Béèrè ìbéèrè oko tàbí ròyìn ìkórè nípa ohùn.",
+    voiceStart: "Bẹ̀rẹ̀ ìpè",
+    voiceEnd: "Parí ìpè",
+    voiceComingSoon: "Ìpè ohùn kò tí ì so pọ̀. Ojú-ìwé yìí yóò gbé olùrànlọ́wọ́ ohùn LiveKit nígbà tí iṣẹ́ ẹ̀rọ ohùn bá ti ṣètán.",
+    voiceLanguageLabel: "Èdè ìsọ̀rọ̀",
+  },
+} as const satisfies Record<Language, Record<string, string>>;
+
+export type TranslationKey = keyof typeof translations.en;
