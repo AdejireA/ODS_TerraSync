@@ -1,7 +1,7 @@
 """Public reference data: locations, crops, units, weather."""
 from fastapi import APIRouter
 
-from app.data.catalog import CROPS, STATES, UNITS
+from app.data.catalog import CROPS, STATES, UNITS, active_states
 from app.data.rules import CROPS_WITH_RULES
 from app.services.weather import get_weather
 
@@ -11,7 +11,7 @@ router = APIRouter(tags=["reference"])
 @router.get("/locations")
 def locations():
     return {"states": [{"name": name, "capital": info["capital"], "pilot": info["pilot"], "lgas": info["lgas"]}
-                       for name, info in STATES.items()]}
+                       for name, info in STATES.items() if name in active_states()]}
 
 
 @router.get("/crops")

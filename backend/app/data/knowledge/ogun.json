@@ -1,0 +1,1269 @@
+{
+  "_about": "TerraSync starter knowledge base for Ogun State. DRAFT: written from widely published general practice; every rule is unreviewed, sources are unverified research candidates, and timing windows are approximate. Replace or extend with the Ogun research pack. Schema: backend/app/data/rules.py.",
+  "version": "0.1.0-draft",
+  "rules": [
+    {
+      "id": "all-heavy-rain-forecast",
+      "crop": "all",
+      "category": "weather",
+      "region": {
+        "level": "state",
+        "states": [
+          "Ogun"
+        ]
+      },
+      "trigger": {
+        "type": "rain_forecast",
+        "rain_probability": 80
+      },
+      "requires": [
+        "weather"
+      ],
+      "priority": 1,
+      "title": "Heavy rain is likely in the next few days",
+      "action": "Clear drainage channels, keep harvested produce covered and off the ground, and avoid spraying anything before rain.",
+      "rationale": "Waterlogging and wet produce increase crop stress, disease and spoilage.",
+      "uncertainty": "Forecasts use the Abeokuta location and are approximate for your farm.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "NiMet — Seasonal Climate Prediction",
+        "url": "https://nimet.gov.ng/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "all-dry-spell-young-crop",
+      "crop": "all",
+      "category": "weather",
+      "region": {
+        "level": "state",
+        "states": [
+          "Ogun"
+        ]
+      },
+      "trigger": {
+        "type": "dry_forecast",
+        "rain_probability": 20,
+        "window_days": [
+          0,
+          30
+        ]
+      },
+      "requires": [
+        "planting_date",
+        "weather"
+      ],
+      "priority": 2,
+      "title": "Little rain expected while your crop is young",
+      "action": "Check soil moisture. Mulch young plants if you can, and do not sow new seed into dry soil.",
+      "rationale": "Young crops are most sensitive to dry spells soon after planting.",
+      "uncertainty": "A short forecast cannot predict the length of a dry spell.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "NiMet — Seasonal Climate Prediction",
+        "url": "https://nimet.gov.ng/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "maize-early-season-planting",
+      "crop": "maize",
+      "category": "planting",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "months",
+        "months": [
+          3,
+          4
+        ]
+      },
+      "requires": [],
+      "priority": 2,
+      "title": "Early-season maize planting time",
+      "action": "Plant once the rains are steady and the soil is moist, not on the first isolated showers.",
+      "rationale": "A false start to the rains can leave newly planted maize without water.",
+      "uncertainty": "Southwest Nigeria normally has two rainy seasons (roughly March–July and September–November); onset varies year to year. Check NiMet's seasonal forecast for this year.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "NiMet — Seasonal Climate Prediction",
+        "url": "https://nimet.gov.ng/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "maize-late-season-planting",
+      "crop": "maize",
+      "category": "planting",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "months",
+        "months": [
+          8,
+          9
+        ]
+      },
+      "requires": [],
+      "priority": 2,
+      "title": "Late-season maize planting time",
+      "action": "If planting for the second season, choose an early-maturing variety so the grain fills before the rains end.",
+      "rationale": "The second rainy season is shorter, so late-maturing varieties risk drought at grain filling.",
+      "uncertainty": "Southwest Nigeria normally has two rainy seasons (roughly March–July and September–November); onset varies year to year. Check NiMet's seasonal forecast for this year.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Maize",
+        "url": "https://www.iita.org/cropsnew/maize/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "maize-weed-early",
+      "crop": "maize",
+      "category": "crop_care",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          0,
+          42
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 1,
+      "title": "Keep young maize free of weeds",
+      "action": "Weed the field during the early weeks after planting, by hoeing or another method you already use safely.",
+      "rationale": "Young maize competes poorly with weeds for light, water and nutrients.",
+      "uncertainty": "The 0–6 week window is a broad placeholder; it varies with variety and weed pressure.",
+      "contraindications": "Avoid deep hoeing close to the plants, which can damage roots.",
+      "escalation": "Ask an extension officer before using any herbicide.",
+      "source": {
+        "title": "IITA — Maize",
+        "url": "https://www.iita.org/cropsnew/maize/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "maize-faw-scouting",
+      "crop": "maize",
+      "category": "crop_care",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          7,
+          60
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 1,
+      "title": "Check maize leaves for fall armyworm",
+      "action": "Inspect the funnel (whorl) of several plants across the field for ragged holes and sawdust-like droppings.",
+      "rationale": "Fall armyworm damages young maize quickly; early detection gives more options.",
+      "uncertainty": "Leaf damage can have other causes. TerraSync cannot confirm a pest from a description.",
+      "contraindications": "Do not apply pesticides without label instructions and expert advice.",
+      "escalation": "If you see caterpillars or heavy damage: Contact the Ogun State Agricultural Development Programme (OGADEP) or an extension officer.",
+      "source": {
+        "title": "FAO — Fall armyworm",
+        "url": "https://www.fao.org/fall-armyworm/en/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "maize-fertiliser-advice",
+      "crop": "maize",
+      "category": "crop_care",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          14,
+          45
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 3,
+      "title": "Get fertiliser advice for your field",
+      "action": "If you use fertiliser, get the rate and timing for your soil and variety from an extension officer.",
+      "rationale": "Fertiliser needs depend on soil, previous crop and variety; a single rate does not fit every farm.",
+      "uncertainty": "TerraSync does not give fertiliser rates.",
+      "contraindications": null,
+      "escalation": "Contact the Ogun State Agricultural Development Programme (OGADEP) or an extension officer.",
+      "source": {
+        "title": "IITA — Maize",
+        "url": "https://www.iita.org/cropsnew/maize/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "maize-harvest-readiness",
+      "crop": "maize",
+      "category": "harvest",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          85,
+          150
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Check whether your maize is ready to harvest",
+      "action": "Look for dry, brown husks and hard grain. Prepare bags, labour and a clean drying surface before harvesting.",
+      "rationale": "Harvesting at maturity and drying promptly reduces mould and storage losses.",
+      "uncertainty": "Maturity depends strongly on variety; the window shown is approximate.",
+      "contraindications": "Do not leave mature maize in the field for long during rainy periods.",
+      "escalation": null,
+      "source": {
+        "title": "IITA — Maize",
+        "url": "https://www.iita.org/cropsnew/maize/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "maize-rain-at-harvest",
+      "crop": "maize",
+      "category": "weather",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "rain_forecast",
+        "rain_probability": 60,
+        "window_days": [
+          85,
+          150
+        ]
+      },
+      "requires": [
+        "planting_date",
+        "weather"
+      ],
+      "priority": 1,
+      "title": "Rain is forecast during your harvest period",
+      "action": "Plan harvesting around dry days and keep harvested cobs or grain covered and off the ground.",
+      "rationale": "Wet grain is more likely to develop mould during drying and storage.",
+      "uncertainty": "Forecasts are approximate and use the Abeokuta location, not your farm.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "FAO — Food loss and waste",
+        "url": "https://www.fao.org/food-loss-and-food-waste/en/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "maize-dry-before-storage",
+      "crop": "maize",
+      "category": "post_harvest",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          85,
+          200
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Dry maize well before storing it",
+      "action": "Dry shelled grain thoroughly, store it in clean, airtight bags off the floor, and check regularly for insects.",
+      "rationale": "Moist grain and storage insects are major causes of post-harvest loss.",
+      "uncertainty": "TerraSync cannot measure grain moisture; use a moisture meter or local test if available.",
+      "contraindications": "Do not mix new grain with old, infested grain.",
+      "escalation": null,
+      "source": {
+        "title": "FAO — Food loss and waste",
+        "url": "https://www.fao.org/food-loss-and-food-waste/en/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "maize-sort-mouldy-cobs",
+      "crop": "maize",
+      "category": "post_harvest",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "always"
+      },
+      "requires": [],
+      "priority": 2,
+      "title": "Sort out mouldy or damaged maize",
+      "action": "Remove mouldy, insect-damaged or broken cobs and grain before storage or sale, and never dry maize on bare soil.",
+      "rationale": "Mould on maize can produce aflatoxins, which are harmful and reduce market value.",
+      "uncertainty": "Aflatoxin cannot be seen; sorting reduces but does not remove the risk.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Aflatoxin research",
+        "url": "https://www.iita.org/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "maize-report-expected-harvest",
+      "crop": "maize",
+      "category": "market",
+      "region": {
+        "level": "state",
+        "states": [
+          "Ogun"
+        ]
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          60,
+          110
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 3,
+      "title": "Tell buyers about your coming maize harvest",
+      "action": "Report your expected quantity and date on the TerraSync produce board so buyers can plan ahead.",
+      "rationale": "Buyers and aggregators can arrange collection earlier when they know supply is coming.",
+      "uncertainty": "Interest on the board is not a guaranteed sale.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "TerraSync product guidance (not agronomic advice)",
+        "url": "https://github.com/AdejireA/ODS_TerraSync",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "cassava-planting-season",
+      "crop": "cassava",
+      "category": "planting",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "months",
+        "months": [
+          4,
+          5,
+          6,
+          9,
+          10
+        ]
+      },
+      "requires": [],
+      "priority": 2,
+      "title": "Cassava planting time",
+      "action": "Plant cassava cuttings when the soil is moist after the rains have started.",
+      "rationale": "Cuttings need soil moisture to sprout and root well.",
+      "uncertainty": "Southwest Nigeria normally has two rainy seasons (roughly March–July and September–November); onset varies year to year. Check NiMet's seasonal forecast for this year.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Cassava",
+        "url": "https://www.iita.org/cropsnew/cassava/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "cassava-healthy-cuttings",
+      "crop": "cassava",
+      "category": "planting",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "months",
+        "months": [
+          3,
+          4,
+          5,
+          6,
+          9,
+          10
+        ]
+      },
+      "requires": [],
+      "priority": 1,
+      "title": "Use cuttings from healthy cassava plants",
+      "action": "Take stems only from healthy, mature plants without yellow, twisted leaves, and plant them soon after cutting.",
+      "rationale": "Diseases such as cassava mosaic spread through infected cuttings.",
+      "uncertainty": "A healthy-looking plant can still carry disease; certified planting material is safer where available.",
+      "contraindications": null,
+      "escalation": "Ask OGADEP about sources of improved, clean cassava stems.",
+      "source": {
+        "title": "IITA — Cassava",
+        "url": "https://www.iita.org/cropsnew/cassava/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "cassava-weed-early",
+      "crop": "cassava",
+      "category": "crop_care",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          0,
+          90
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 1,
+      "title": "Keep young cassava weeded",
+      "action": "Weed regularly in the first months after planting until the leaves cover the ground.",
+      "rationale": "Cassava grows slowly at first, so early weed competition can greatly reduce root yield.",
+      "uncertainty": "The 0–3 month window is a broad placeholder.",
+      "contraindications": "Avoid damaging the stems and shallow roots while weeding.",
+      "escalation": "Ask an extension officer before using any herbicide.",
+      "source": {
+        "title": "IITA — Cassava",
+        "url": "https://www.iita.org/cropsnew/cassava/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "cassava-mosaic-check",
+      "crop": "cassava",
+      "category": "crop_care",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          14,
+          120
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Look for yellow, twisted cassava leaves",
+      "action": "Check leaves for yellow-green mottling or twisting. Mark affected plants and do not use them for cuttings.",
+      "rationale": "Mosaic-type diseases spread through infected cuttings and whiteflies and can reduce yield.",
+      "uncertainty": "Leaf symptoms are not a diagnosis; nutrient problems can look similar.",
+      "contraindications": null,
+      "escalation": "If many plants are affected: Contact the Ogun State Agricultural Development Programme (OGADEP) or an extension officer.",
+      "source": {
+        "title": "IITA — Cassava",
+        "url": "https://www.iita.org/cropsnew/cassava/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "cassava-harvest-planning",
+      "crop": "cassava",
+      "category": "harvest",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          240,
+          540
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Plan cassava harvest around processing or sale",
+      "action": "Arrange processing, transport or a buyer before you uproot, and harvest only what can be handled quickly.",
+      "rationale": "Cassava roots keep in the ground but spoil quickly once harvested.",
+      "uncertainty": "Maturity varies widely by variety; the window shown is approximate.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Cassava",
+        "url": "https://www.iita.org/cropsnew/cassava/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "cassava-process-quickly",
+      "crop": "cassava",
+      "category": "post_harvest",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "always"
+      },
+      "requires": [],
+      "priority": 2,
+      "title": "Process or sell harvested cassava quickly",
+      "action": "Move harvested roots to processing or buyers as soon as possible and avoid bruising or cutting them.",
+      "rationale": "Fresh cassava roots start to deteriorate within a few days of harvest.",
+      "uncertainty": "Shelf life depends on handling and conditions.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Cassava",
+        "url": "https://www.iita.org/cropsnew/cassava/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "cassava-report-expected-harvest",
+      "crop": "cassava",
+      "category": "market",
+      "region": {
+        "level": "state",
+        "states": [
+          "Ogun"
+        ]
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          240,
+          540
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 3,
+      "title": "Tell processors about your cassava",
+      "action": "Report the quantity you expect to harvest and when, so processors can plan collection before you uproot.",
+      "rationale": "Matching harvest to processor demand reduces losses from roots waiting after harvest.",
+      "uncertainty": "Interest on the board is not a guaranteed sale.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "TerraSync product guidance (not agronomic advice)",
+        "url": "https://github.com/AdejireA/ODS_TerraSync",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "yam-planting-season",
+      "crop": "yam",
+      "category": "planting",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "months",
+        "months": [
+          2,
+          3,
+          4
+        ]
+      },
+      "requires": [],
+      "priority": 2,
+      "title": "Yam planting time",
+      "action": "Plant healthy setts on prepared mounds or ridges early in the rainy season.",
+      "rationale": "Early planting gives yam the full rainy season to grow tubers.",
+      "uncertainty": "Southwest Nigeria normally has two rainy seasons (roughly March–July and September–November); onset varies year to year. Check NiMet's seasonal forecast for this year. Some farmers plant late in the dry season with mulch; ask locally.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Yam",
+        "url": "https://www.iita.org/cropsnew/yam/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "yam-healthy-setts",
+      "crop": "yam",
+      "category": "planting",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "months",
+        "months": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "requires": [],
+      "priority": 2,
+      "title": "Use clean, healthy yam setts",
+      "action": "Choose setts from firm tubers without rot, cracks or insect damage.",
+      "rationale": "Rot and pests on planting material reduce sprouting and spread to the new crop.",
+      "uncertainty": "Visual checks cannot detect all diseases.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Yam",
+        "url": "https://www.iita.org/cropsnew/yam/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "yam-staking",
+      "crop": "yam",
+      "category": "crop_care",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          21,
+          90
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Stake your yam vines",
+      "action": "Provide stakes or trellises so vines climb and leaves get sunlight.",
+      "rationale": "Staked yam vines usually capture more light, which supports tuber growth.",
+      "uncertainty": "The benefit varies with variety and site; the timing shown is approximate.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Yam",
+        "url": "https://www.iita.org/cropsnew/yam/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "yam-weed",
+      "crop": "yam",
+      "category": "crop_care",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          0,
+          120
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Keep yam mounds weeded",
+      "action": "Weed around mounds regularly, taking care not to damage vines or expose tubers.",
+      "rationale": "Weeds compete with young yam for water and nutrients.",
+      "uncertainty": "Timing is approximate.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Yam",
+        "url": "https://www.iita.org/cropsnew/yam/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "yam-harvest-readiness",
+      "crop": "yam",
+      "category": "harvest",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          210,
+          300
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Check whether your yam is ready",
+      "action": "When most leaves and vines turn yellow and dry, dig carefully to avoid cutting or bruising the tubers.",
+      "rationale": "Damaged tubers rot quickly in storage.",
+      "uncertainty": "Maturity depends on variety and planting time; the window shown is approximate.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Yam",
+        "url": "https://www.iita.org/cropsnew/yam/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "yam-storage",
+      "crop": "yam",
+      "category": "post_harvest",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "always"
+      },
+      "requires": [],
+      "priority": 2,
+      "title": "Store yam in a shaded, airy place",
+      "action": "Handle tubers gently, keep them in a well-ventilated, shaded barn or rack, and remove rotting tubers regularly.",
+      "rationale": "Heat, poor airflow and wounds speed up rotting and sprouting.",
+      "uncertainty": "Storage life varies by variety and conditions.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Yam",
+        "url": "https://www.iita.org/cropsnew/yam/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "tomato-staking-scouting",
+      "crop": "tomato",
+      "category": "crop_care",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          14,
+          60
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 1,
+      "title": "Stake tomatoes and check for disease",
+      "action": "Stake plants to keep fruit off the soil, and check for wilting or spotted leaves. Remove badly affected plants.",
+      "rationale": "Tomato is very prone to leaf and soil-borne diseases, especially in wet weather.",
+      "uncertainty": "Days are counted from transplanting. Symptoms are not a diagnosis.",
+      "contraindications": "Do not spray without label instructions and expert advice.",
+      "escalation": "If plants wilt suddenly or many leaves are spotted: Contact the Ogun State Agricultural Development Programme (OGADEP) or an extension officer.",
+      "source": {
+        "title": "NIHORT — National Horticultural Research Institute",
+        "url": "https://nihort.gov.ng/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "tomato-wet-weather",
+      "crop": "tomato",
+      "category": "weather",
+      "region": {
+        "level": "state",
+        "states": [
+          "Ogun"
+        ]
+      },
+      "trigger": {
+        "type": "rain_forecast",
+        "rain_probability": 60,
+        "window_days": [
+          0,
+          120
+        ]
+      },
+      "requires": [
+        "planting_date",
+        "weather"
+      ],
+      "priority": 2,
+      "title": "Wet weather raises tomato disease risk",
+      "action": "Improve airflow by pruning crowded leaves, avoid working among wet plants, and harvest ripe fruit before heavy rain.",
+      "rationale": "Diseases spread faster on wet leaves; rain also splits ripening fruit.",
+      "uncertainty": "Forecasts are approximate for your farm.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "NIHORT — National Horticultural Research Institute",
+        "url": "https://nihort.gov.ng/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "tomato-harvest",
+      "crop": "tomato",
+      "category": "harvest",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          60,
+          120
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Harvest tomatoes at colour change for transport",
+      "action": "Pick fruit as it starts to change colour if it must travel, and fully red fruit only for nearby sale.",
+      "rationale": "Fruit picked at colour change survives transport better.",
+      "uncertainty": "Days are counted from transplanting and vary by variety.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "NIHORT — National Horticultural Research Institute",
+        "url": "https://nihort.gov.ng/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "tomato-crates-not-sacks",
+      "crop": "tomato",
+      "category": "post_harvest",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "always"
+      },
+      "requires": [],
+      "priority": 1,
+      "title": "Pack tomatoes in crates, not sacks",
+      "action": "Use shallow crates or baskets, keep them in shade, and do not overfill or stack fruit too deep.",
+      "rationale": "Crushing in sacks and heat are major causes of tomato losses between farm and market.",
+      "uncertainty": "Loss levels vary with distance and handling.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "FAO — Food loss and waste",
+        "url": "https://www.fao.org/food-loss-and-food-waste/en/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "tomato-report-expected-harvest",
+      "crop": "tomato",
+      "category": "market",
+      "region": {
+        "level": "state",
+        "states": [
+          "Ogun"
+        ]
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          40,
+          90
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 3,
+      "title": "Line up buyers before your tomatoes ripen",
+      "action": "Report expected quantity and picking dates on the produce board so buyers can plan collection.",
+      "rationale": "Tomatoes cannot wait long after harvest, so early coordination reduces waste.",
+      "uncertainty": "Interest on the board is not a guaranteed sale.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "TerraSync product guidance (not agronomic advice)",
+        "url": "https://github.com/AdejireA/ODS_TerraSync",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "pepper-scouting",
+      "crop": "pepper",
+      "category": "crop_care",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          14,
+          90
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Check pepper plants for pests and disease",
+      "action": "Look under leaves for insects and check for curled, spotted or wilting leaves. Remove badly affected plants.",
+      "rationale": "Early detection limits spread through the field.",
+      "uncertainty": "Days are counted from transplanting. Symptoms are not a diagnosis.",
+      "contraindications": null,
+      "escalation": "Contact the Ogun State Agricultural Development Programme (OGADEP) or an extension officer.",
+      "source": {
+        "title": "NIHORT — National Horticultural Research Institute",
+        "url": "https://nihort.gov.ng/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "pepper-harvest",
+      "crop": "pepper",
+      "category": "harvest",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          70,
+          150
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Pick peppers regularly",
+      "action": "Harvest mature fruit every few days, cutting or twisting gently so branches are not broken.",
+      "rationale": "Regular picking reduces over-ripe and damaged fruit.",
+      "uncertainty": "Days are counted from transplanting and vary by variety.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "NIHORT — National Horticultural Research Institute",
+        "url": "https://nihort.gov.ng/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "pepper-drying",
+      "crop": "pepper",
+      "category": "post_harvest",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "always"
+      },
+      "requires": [],
+      "priority": 2,
+      "title": "Dry peppers on a clean, raised surface",
+      "action": "If drying, spread peppers thinly on mats or raised racks, turn them often and cover them from rain and dew.",
+      "rationale": "Drying on bare ground and rewetting lead to mould and dirt contamination.",
+      "uncertainty": "Drying time depends on weather.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "FAO — Food loss and waste",
+        "url": "https://www.fao.org/food-loss-and-food-waste/en/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "groundnut-weed-early",
+      "crop": "groundnut",
+      "category": "crop_care",
+      "region": {
+        "level": "southwest",
+        "states": [
+          "Ogun",
+          "Ondo",
+          "Osun",
+          "Lagos"
+        ]
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          0,
+          45
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Weed groundnut early",
+      "action": "Weed during the first weeks, then avoid disturbing the soil once pegs start entering the ground.",
+      "rationale": "Early weeds reduce yield; late disturbance damages developing pods.",
+      "uncertainty": "Timing is approximate.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "ICRISAT — Groundnut",
+        "url": "https://www.icrisat.org/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "groundnut-harvest-readiness",
+      "crop": "groundnut",
+      "category": "harvest",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "stage",
+        "window_days": [
+          90,
+          130
+        ]
+      },
+      "requires": [
+        "planting_date"
+      ],
+      "priority": 2,
+      "title": "Check whether groundnuts are ready",
+      "action": "Pull a few plants: most pods should have a darkened inner shell and well-filled kernels. Lift when the soil is not waterlogged.",
+      "rationale": "Harvesting too early lowers yield; too late increases pod loss in the soil.",
+      "uncertainty": "Maturity depends on variety; the window shown is approximate.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "ICRISAT — Groundnut",
+        "url": "https://www.icrisat.org/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    {
+      "id": "groundnut-dry-quickly",
+      "crop": "groundnut",
+      "category": "post_harvest",
+      "region": {
+        "level": "national"
+      },
+      "trigger": {
+        "type": "always"
+      },
+      "requires": [],
+      "priority": 1,
+      "title": "Dry groundnuts quickly and sort them",
+      "action": "Dry pods off the ground soon after lifting, then remove damaged, shrivelled or mouldy pods before storage.",
+      "rationale": "Slow drying and damaged pods raise the risk of aflatoxin contamination.",
+      "uncertainty": "Aflatoxin cannot be seen; sorting reduces but does not remove the risk.",
+      "contraindications": null,
+      "escalation": null,
+      "source": {
+        "title": "IITA — Aflatoxin research",
+        "url": "https://www.iita.org/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    }
+  ],
+  "crop_profiles": {
+    "maize": {
+      "harvest_window_days": [
+        90,
+        120
+      ],
+      "counted_from": "planting",
+      "uncertainty": "Early-maturing varieties can be ready sooner; late varieties later.",
+      "source": {
+        "title": "IITA — Maize",
+        "url": "https://www.iita.org/cropsnew/maize/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    "cassava": {
+      "harvest_window_days": [
+        270,
+        540
+      ],
+      "counted_from": "planting",
+      "uncertainty": "Cassava can be harvested over a long period; choose timing by variety and market.",
+      "source": {
+        "title": "IITA — Cassava",
+        "url": "https://www.iita.org/cropsnew/cassava/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    "yam": {
+      "harvest_window_days": [
+        210,
+        300
+      ],
+      "counted_from": "planting",
+      "uncertainty": "Depends on variety and planting date.",
+      "source": {
+        "title": "IITA — Yam",
+        "url": "https://www.iita.org/cropsnew/yam/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    "tomato": {
+      "harvest_window_days": [
+        60,
+        100
+      ],
+      "counted_from": "transplanting",
+      "uncertainty": "Picking continues for several weeks once it starts.",
+      "source": {
+        "title": "NIHORT — National Horticultural Research Institute",
+        "url": "https://nihort.gov.ng/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    "pepper": {
+      "harvest_window_days": [
+        70,
+        120
+      ],
+      "counted_from": "transplanting",
+      "uncertainty": "Picking continues for several weeks once it starts.",
+      "source": {
+        "title": "NIHORT — National Horticultural Research Institute",
+        "url": "https://nihort.gov.ng/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    },
+    "groundnut": {
+      "harvest_window_days": [
+        90,
+        130
+      ],
+      "counted_from": "planting",
+      "uncertainty": "Depends strongly on variety.",
+      "source": {
+        "title": "ICRISAT — Groundnut",
+        "url": "https://www.icrisat.org/",
+        "verified": false
+      },
+      "review_status": "unreviewed"
+    }
+  }
+}
