@@ -19,9 +19,9 @@ import os
 from datetime import date
 
 from dotenv import load_dotenv
-from livekit import agents
+from livekit import agents, rtc
 from livekit.agents import (
-    Agent, AgentServer, AgentSession, AudioConfig, BackgroundAudioPlayer, BuiltinAudioClip,
+    NOT_GIVEN, Agent, AgentServer, AgentSession, AudioConfig, BackgroundAudioPlayer, BuiltinAudioClip,
     JobProcess, MetricsCollectedEvent, RunContext, function_tool, inference, metrics,
 )
 from livekit.plugins import silero, spitch
@@ -51,7 +51,36 @@ SAVED_NOTICE = {
     "en": " This call is saved to your account.",
     "yo": " A ó fi ìpè yìí pamọ́ sí àkọọ́lẹ̀ yín.",
 }
-LLM_MODEL = os.getenv("TERRASYNC_LLM_MODEL", "google/gemma-4-31b-it")
+# Measured first-token latency for a Yorùbá prompt: gemini-2.5-flash ~0.7s vs gemma-4-31b-it ~1.1-1.7s.
+LLM_MODEL = os.getenv("TERRASYNC_LLM_MODEL", "google/gemini-2.5-flash")
+SPITCH_UPLOAD_RATE = 16000
+
+
+class FastSpitchSTT(spitch.STT):
+    """Spitch STT that uploads 16 kHz audio.
+
+    The plugin uploads the whole utterance as WAV at the room's sample rate
+    (24-48 kHz). Measured on this network: 48 kHz (589 KB) took 7-20 s,
+    16 kHz (196 KB) took 2.3-2.8 s. Speech recognition does not need more.
+    """
+
+    async def _recognize_impl(self, buffer, *, language=NOT_GIVEN, conn_options):
+        frames = buffer if isinstance(buffer, list) else [buffer]
+        audio = rtc.combine_audio_frames(frames)
+        if audio.sample_rate > SPITCH_UPLOAD_RATE:
+            resampler = rtc.AudioResampler(audio.sample_rate, SPITCH_UPLOAD_RATE, num_channels=audio.num_channels)
+            audio = rtc.combine_audio_frames(resampler.push(audio) + resampler.flush())
+        return await super()._recognize_impl([audio], language=language, conn_options=conn_options)
+
+
+def speech_services(language: str):
+    """(stt, tts) for a call. Yorùbá uses Spitch; English uses streaming LiveKit Inference
+    models (faster and far more accurate for English) unless TERRASYNC_EN_PROVIDER=spitch."""
+    if language == "en" and os.getenv("TERRASYNC_EN_PROVIDER", "inference") != "spitch":
+        voice_id = os.getenv("TERRASYNC_EN_TTS_VOICE") or NOT_GIVEN
+        return (inference.STT(model=os.getenv("TERRASYNC_EN_STT_MODEL", "deepgram/nova-3"), language="en"),
+                inference.TTS(model=os.getenv("TERRASYNC_EN_TTS_MODEL", "cartesia/sonic-3"), voice=voice_id))
+    return FastSpitchSTT(language=language), spitch.TTS(language=language, voice=VOICES[language])
 
 
 def _float_env(name: str, default: float) -> float:
@@ -352,12 +381,13 @@ async def entrypoint(ctx: agents.JobContext):
 
     store = bool(session_row and session_row["user_id"]) and env_bool("TERRASYNC_STORE_TRANSCRIPTS", True)
     vad = ctx.proc.userdata.get("vad") or silero.VAD.load()
+    stt, tts = speech_services(language)
 
     session = AgentSession(
         vad=vad,
-        stt=spitch.STT(language=language),
+        stt=stt,
         llm=inference.LLM(model=LLM_MODEL),
-        tts=spitch.TTS(language=language, voice=VOICES[language]),
+        tts=tts,
         turn_handling={
             # Spitch transcribes after the caller stops; a short fixed wait avoids cutting people off.
             "endpointing": {
@@ -392,13 +422,34 @@ async def entrypoint(ctx: agents.JobContext):
 
     await session.start(room=ctx.room, agent=FarmerAssistant(language, session_row, farm))
 
-    # Soft typing sound while the agent is thinking, so callers never hear dead air.
+    # Soft typing sound from the moment the caller stops talking until the agent speaks.
+    # This covers transcription as well as thinking (the agent is still "listening"
+    # while Spitch transcribes, so a thinking-only sound left that gap silent).
     if env_bool("TERRASYNC_THINKING_SOUND", True):
-        background = BackgroundAudioPlayer(thinking_sound=[
-            AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING, volume=0.6),
-            AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.5),
-        ])
+        background = BackgroundAudioPlayer()
         await background.start(room=ctx.room, agent_session=session)
+        gap = {"handle": None}
+
+        def start_gap_sound() -> None:
+            if gap["handle"] is None or gap["handle"].done():
+                gap["handle"] = background.play(AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING, volume=0.5), loop=True)
+
+        def stop_gap_sound() -> None:
+            if gap["handle"] is not None and not gap["handle"].done():
+                gap["handle"].stop()
+            gap["handle"] = None
+
+        @session.on("user_state_changed")
+        def _on_user_state(event) -> None:
+            if event.new_state == "speaking":
+                stop_gap_sound()
+            elif event.old_state == "speaking" and event.new_state == "listening":
+                start_gap_sound()
+
+        @session.on("agent_state_changed")
+        def _on_agent_state(event) -> None:
+            if event.new_state == "speaking" or (event.old_state == "thinking" and event.new_state == "listening"):
+                stop_gap_sound()
 
     session.say(GREETINGS[language] + (SAVED_NOTICE[language] if store else ""), allow_interruptions=True)
 
