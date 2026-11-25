@@ -1,0 +1,51 @@
+name: Backend CI and deployment
+on:
+  pull_request:
+    paths: ['backend/**', '.github/workflows/backend.yml']
+  push:
+    branches: [main]
+    paths: ['backend/**', '.github/workflows/backend.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: terrasync-backend-deploy
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements.txt httpx
+      - name: Verify API workflow
+        working-directory: backend
+        env:
+          TERRASYNC_DATABASE_PATH: /tmp/terrasync-ci.db
+        run: python -m deploy.smoke_test
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.NOBUS_DEPLOY_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.NOBUS_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_KEY" && test -n "$SSH_KNOWN_HOSTS"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Deploy backend
+        env:
+          NOBUS_HOST: ${{ secrets.NOBUS_HOST }}
+        run: |
+          test -n "$NOBUS_HOST"
+          git archive HEAD:backend | gzip > /tmp/terrasync-backend.tar.gz
+          scp -o StrictHostKeyChecking=yes /tmp/terrasync-backend.tar.gz "ubuntu@$NOBUS_HOST:/tmp/terrasync-backend-${GITHUB_RUN_ID}.tar.gz"
+          ssh -o StrictHostKeyChecking=yes "ubuntu@$NOBUS_HOST" "mkdir -p /tmp/terrasync-deploy-${GITHUB_RUN_ID} && tar -xzf /tmp/terrasync-backend-${GITHUB_RUN_ID}.tar.gz -C /tmp/terrasync-deploy-${GITHUB_RUN_ID} && bash /tmp/terrasync-deploy-${GITHUB_RUN_ID}/deploy/install.sh /tmp/terrasync-backend-${GITHUB_RUN_ID}.tar.gz"
