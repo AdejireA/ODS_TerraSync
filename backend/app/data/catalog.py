@@ -61,6 +61,14 @@ STATES = {
 }
 
 
+def active_states() -> list[str]:
+    """States open for use. Ogun is the pilot; others are kept as data for later expansion."""
+    from app.core.config import env
+    raw = env("TERRASYNC_ACTIVE_STATES", "Ogun")
+    names = [name.strip() for name in raw.split(",") if name.strip() in STATES]
+    return names or ["Ogun"]
+
+
 def _key(text: str) -> str:
     return "".join(ch for ch in (text or "").lower() if ch.isalnum())
 
@@ -83,10 +91,11 @@ def normalize_unit(value: str) -> str:
 
 def normalize_state(value: str) -> str:
     key = _key(value.removesuffix(" State") if value else value)
-    for name in STATES:
+    active = active_states()
+    for name in active:
         if key == _key(name):
             return name
-    raise ValueError(f"Unsupported state. Choose one of: {', '.join(STATES)}")
+    raise ValueError(f"TerraSync currently covers {', '.join(active)} State only")
 
 
 def normalize_lga(state: str, value: str) -> str:

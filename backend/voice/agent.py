@@ -18,7 +18,7 @@ from livekit.plugins import silero, spitch
 
 from app.core.config import VOICE_AGENT_NAME, env_bool
 from app.core.database import initialize
-from app.services import farms, harvest, insights, tasks, voice
+from app.services import farms, harvest, insights, supply, tasks, voice
 from app.services.harvest import HarvestReport
 from app.services.tasks import TaskInput
 from app.services.weather import get_weather
@@ -66,7 +66,8 @@ class FarmerAssistant(Agent):
             f"Speak {LANGUAGE_NAMES[language]} in short, simple sentences suitable for audio. Today is {date.today().isoformat()}. "
             f"{context} "
             "Always use tools for facts: get_daily_insights for what to do today, search_agricultural_knowledge for "
-            "specific questions, get_local_weather for weather, list_harvest_reports for produce availability. "
+            "specific questions, get_local_weather for weather, get_harvest_readiness for harvest timing and post-harvest handling, list_harvest_reports and "
+            "get_supply_summary for produce availability. TerraSync currently covers Ogun State only. "
             "Never invent weather, crop maturity, quantities, diagnoses, pesticide products or doses. "
             "If a tool returns no guidance or an error, say so plainly and suggest contacting an extension officer. "
             "Mention when advice is pending expert review. "
@@ -124,18 +125,31 @@ class FarmerAssistant(Agent):
             return _error(exc)
 
     @function_tool()
-    async def get_harvest_readiness(self, context: RunContext, crop: str | None = None) -> dict:
-        """Harvest and post-harvest guidance for the crop."""
-        crop = crop or (self.farm["crop"] if self.farm else None)
-        if not crop:
-            return {"error": "Ask the farmer which crop they mean."}
+    async def get_harvest_readiness(self, context: RunContext, crop: str | None = None,
+                                    lga: str | None = None, planting_date: str | None = None) -> dict:
+        """Expected harvest window, readiness checks and post-harvest guidance.
+        Uses the saved farm unless crop/lga/planting_date (YYYY-MM-DD) are given."""
         try:
-            return {"harvest": insights.search_knowledge(crop, "harvest")["items"],
-                    "post_harvest": insights.search_knowledge(crop, "post_harvest")["items"]}
+            if self.farm and not crop:
+                f = self.farm
+                return await asyncio.to_thread(insights.harvest_readiness, f["crop"], f["state"], f["lga"],
+                                               farms.effective_planting_date(f), True, f["id"])
+            if not crop:
+                return {"error": "Ask the farmer which crop they mean."}
+            planted = date.fromisoformat(planting_date) if planting_date else None
+            return await asyncio.to_thread(insights.harvest_readiness, crop, "Ogun" if lga else None, lga, planted)
         except ValueError as exc:
             return _error(exc)
 
     # ------------------------------------------------------------- supply
+    @function_tool()
+    async def get_supply_summary(self, context: RunContext, crop: str | None = None, lga: str | None = None) -> dict:
+        """Expected produce supply by crop, LGA and week from TerraSync reports (participating farmers only)."""
+        try:
+            return supply.supply_summary(crop=crop, lga=lga)
+        except ValueError as exc:
+            return _error(exc)
+
     @function_tool()
     async def list_harvest_reports(self, context: RunContext, crop: str | None = None,
                                    state: str | None = None) -> dict:
@@ -217,6 +231,10 @@ async def entrypoint(ctx: agents.JobContext):
         stt=spitch.STT(language=language),
         llm=inference.LLM(model=os.getenv("TERRASYNC_LLM_MODEL", "google/gemma-4-31b-it")),
         tts=spitch.TTS(language=language, voice=VOICES[language]),
+        # Spitch STT can finalise after the VAD sees silence; wait a little longer
+        # before ending the caller's turn so transcripts are not cut off.
+        min_endpointing_delay=0.8,
+        max_endpointing_delay=4.0,
     )
 
     if store:

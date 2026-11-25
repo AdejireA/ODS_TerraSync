@@ -68,7 +68,27 @@ Farmer only. Body: `{name?, state, lga, crop, planting_date?, approximate_age_we
 ```
 Show `review_status`/`uncertainty` in the UI. Rules exist only for maize and cassava; other crops return `no_applicable_rules` with a note. Insight text is English only for now (a note says so when `language=yo`).
 
-`GET /knowledge?crop=maize&category=post_harvest&state=Ogun&q=storage` (public) → `{crop, category, items: [same item shape], status}`. Categories: `crop_care, harvest, post_harvest, weather`.
+`GET /knowledge?crop=maize&category=post_harvest&state=Ogun&q=storage` (public) → `{crop, category, items: [same item shape], status}`. Categories: `planting, crop_care, harvest, post_harvest, weather, market`.
+
+Knowledge base: `backend/app/data/knowledge/ogun.json` (36 draft rules, 6 crops, crop harvest profiles), validated at startup by `app/data/rules.py`. All rules are `unreviewed` with unverified sources until replaced by the Ogun research pack.
+
+## Harvest intelligence
+`GET /harvest-readiness` (optional auth) — same context params as insights (`farm_id`, or `crop, state, lga, planting_date`), plus `include_weather`.
+```json
+{ "phase": "growing" | "approaching_harvest" | "harvest_window" | "past_typical_window" | "unknown",
+  "days_to_window": 12,
+  "expected_window": {"start_date": "…", "end_date": "…", "counted_from": "planting"|"transplanting", "uncertainty": "…", "source": {…}, "review_status": "unreviewed"} | null,
+  "readiness_checks": [insight items], "post_harvest": [insight items], "market": [insight items], "weather_alerts": [insight items],
+  "suggested_report": {"crop", "state", "lga", "available_date", "status", "farm_id"} | null,
+  "missing_context": [...], "notes": [...] }
+```
+Use `suggested_report` to pre-fill the harvest report form.
+
+## Supply intelligence
+`GET /supply/summary?crop&state&lga&days=60` (public) → `{generated_at, horizon_days, filters, totals: [{crop, unit, total_quantity, reports, with_interest, lgas}], weekly: [{crop, lga, unit, week_start, total_quantity, reports, with_interest, available_now}], post_harvest_guidance: {crop: [{rule_id, title, action, review_status}]}, disclaimer}`. Units are never summed together; totals cover TerraSync reports only.
+
+## Coverage
+The backend accepts **Ogun State only** by default (`TERRASYNC_ACTIVE_STATES=Ogun`); other states return 422. `GET /locations` lists only active states.
 
 `GET /weather?state=Ogun&lga=Odeda` (public) → `{available, provider: "Open-Meteo", location: {name, lat, lon, resolution: "state_capital", note}, fetched_at, current: {time, temperature_c, relative_humidity_pct, precipitation_mm}, daily: [{date, temperature_max_c, temperature_min_c, precipitation_mm, precipitation_probability_pct}]}`. On failure: `{available: false, reason, location…}` — show "weather unavailable", never placeholder numbers.
 
@@ -88,7 +108,7 @@ Calls are **browser-only (WebRTC)**. GSM/basic-phone calls need a SIP trunk and 
 
 Guest calls: general advice and harvest drafts; no saved farm, no tasks, transcripts not stored. Signed-in calls with `farm_id`: the agent uses that farm automatically and saves the transcript (the agent tells the caller).
 
-Agent tools (same services as the API): `get_farm_profile, get_daily_insights, search_agricultural_knowledge, get_local_weather, get_harvest_readiness, list_harvest_reports, prepare_harvest_report, publish_confirmed_harvest, create_farm_task`.
+Agent tools (same services as the API): `get_farm_profile, get_daily_insights, search_agricultural_knowledge, get_local_weather, get_harvest_readiness, get_supply_summary, list_harvest_reports, prepare_harvest_report, publish_confirmed_harvest, create_farm_task`.
 
 ## Health
 `GET /health` → `{status: ok|degraded, version, database, voice_configured, weather_enabled}`.

@@ -135,8 +135,10 @@ def test_guest_insights_by_stage(client):
     body = client.get("/api/v1/insights/today", params={"crop": "maize", "state": "Ogun", "lga": "Odeda",
                                                         "planting_date": planted}).json()
     ids = [item["rule_id"] for item in body["items"]]
+    assert {"maize-weed-early", "maize-faw-scouting", "maize-fertiliser-advice"} <= set(ids)
     # Same priority: the more local (southwest) rule ranks before the national one.
-    assert ids == ["maize-weed-early", "maize-faw-scouting"]
+    assert ids.index("maize-weed-early") < ids.index("maize-faw-scouting") < ids.index("maize-fertiliser-advice")
+    assert "maize-harvest-readiness" not in ids
     assert body["context"]["days_after_planting"] == 20
     assert all(item["review_status"] == "unreviewed" and item["evidence"]["source_url"] for item in body["items"])
     assert any("pending expert review" in note for note in body["notes"])
@@ -145,9 +147,10 @@ def test_guest_insights_by_stage(client):
 def test_insights_missing_context_and_unsupported_crop(client):
     body = client.get("/api/v1/insights/today", params={"crop": "maize"}).json()
     assert {m["field"] for m in body["missing_context"]} >= {"planting_date", "state"}
+    # Without a planting date only stage-independent rules apply.
     tomato = client.get("/api/v1/insights/today", params={"crop": "tomato", "state": "Ogun"}).json()
-    assert tomato["items"] == [] and tomato["status"] == "no_applicable_rules"
-    assert any("does not have rules" in note for note in tomato["notes"])
+    ids = [item["rule_id"] for item in tomato["items"]]
+    assert "tomato-crates-not-sacks" in ids and "tomato-harvest" not in ids
     assert client.get("/api/v1/insights/today").status_code == 422
 
 
@@ -172,7 +175,9 @@ def test_rain_rule_uses_weather(client, monkeypatch):
     planted = (date.today() - timedelta(days=100)).isoformat()
     body = client.get("/api/v1/insights/today", params={"crop": "maize", "state": "Ogun",
                                                         "planting_date": planted}).json()
-    assert body["items"][0]["rule_id"] == "maize-rain-at-harvest"
+    ids = [item["rule_id"] for item in body["items"]]
+    assert ids[:2] == ["all-heavy-rain-forecast", "maize-rain-at-harvest"]  # state-level ranks first
+    assert "all-dry-spell-young-crop" not in ids
     assert body["weather"]["available"] is True
 
 
@@ -190,11 +195,11 @@ def test_weather_unavailable_is_honest(client, monkeypatch):
 
 def test_reference_and_knowledge(client):
     states = client.get("/api/v1/locations").json()["states"]
-    assert [s["name"] for s in states] == ["Ogun", "Ondo", "Osun", "Lagos"]
+    assert [s["name"] for s in states] == ["Ogun"]
     assert len(states[0]["lgas"]) == 20
     assert "bags" in client.get("/api/v1/crops").json()["units"]
     post = client.get("/api/v1/knowledge", params={"crop": "maize", "category": "post_harvest"}).json()
-    assert [i["rule_id"] for i in post["items"]] == ["maize-dry-before-storage"]
+    assert {i["rule_id"] for i in post["items"]} == {"maize-dry-before-storage", "maize-sort-mouldy-cobs"}
 
 
 # ------------------------------------------------------------- tasks/voice
