@@ -9,6 +9,8 @@ import { CropDetail } from "./pages/CropDetail";
 import { ReportForm } from "./pages/ReportForm";
 import { Board } from "./pages/Board";
 import { Voice } from "./pages/Voice";
+import { Settings } from "./pages/Settings";
+import { More } from "./pages/More";
 
 export default function App() {
   return (
@@ -24,6 +26,8 @@ export default function App() {
               <Route path="/harvest/report" element={<ReportForm />} />
               <Route path="/harvest/board" element={<Board />} />
               <Route path="/voice" element={<Voice />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/more" element={<More />} />
             </Route>
           </Routes>
         </BrowserRouter>

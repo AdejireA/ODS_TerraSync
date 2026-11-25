@@ -7,6 +7,8 @@ import { areaUnitKey, datePrecisionKey, plantingStatusKey } from "../data/farmOp
 import { getGuidance, type GuidanceItem } from "../lib/api";
 import { FEATURES } from "../lib/featureFlags";
 import { Card } from "../components/ui/Card";
+import { PageHeader } from "../components/ui/PageHeader";
+import { SectionHeader } from "../components/ui/SectionHeader";
 import { ErrorState, LoadingState, NotAvailableState } from "../components/ui/StatusStates";
 
 export function CropDetail() {
@@ -39,15 +41,15 @@ export function CropDetail() {
   const record = profile?.crops.find((crop) => crop.cropId === cropId);
 
   return (
-    <div className="app-container space-y-section py-section">
+    <div className="shell-container space-y-section py-section">
       <Link to="/dashboard" className="text-sm font-medium text-primary underline">
         ← {t("cropDetailBack")}
       </Link>
 
-      <h2 className="text-page-title text-primary">{cropName(cropId, language)}</h2>
+      <PageHeader title={cropName(cropId, language)} />
 
       <section className="space-y-row">
-        <h3 className="text-section-heading text-primary">{t("cropDetailMyRecords")}</h3>
+        <SectionHeader title={t("cropDetailMyRecords")} />
         {record ? (
           <Card className="space-y-1">
             <p className="text-sm">{t(plantingStatusKey(record.status))}</p>
@@ -72,7 +74,7 @@ export function CropDetail() {
       </section>
 
       <section className="space-y-row">
-        <h3 className="text-section-heading text-primary">{t("cropDetailGuidanceTitle")}</h3>
+        <SectionHeader title={t("cropDetailGuidanceTitle")} />
         {!FEATURES.cropAdvisory && <NotAvailableState label={t("notAvailableCropAdvisory")} />}
         {FEATURES.cropAdvisory && status === "loading" && (
           <LoadingState label={t("cropDetailGuidanceLoading")} />
