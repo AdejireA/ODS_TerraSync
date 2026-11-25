@@ -5,7 +5,7 @@ export const FEATURES = {
   harvestReports: true,
   dailyInsights: true,
   weather: true,
-  farmTasks: false,
+  farmTasks: true,
   cropAdvisory: true,
   voiceCall: true,
 } as const;

@@ -13,6 +13,8 @@ export interface FarmCropRecord {
   variety?: string;
   plantedArea?: number;
   plantedAreaUnit?: AreaUnit;
+  /** Backend `farms` row id once this crop has been synced to an account. */
+  backendFarmId?: string;
 }
 
 export const FARM_PROFILE_VERSION = 2 as const;
@@ -30,6 +32,9 @@ export interface FarmProfile {
   soilType?: SoilType;
   waterSource?: WaterSource;
   crops: FarmCropRecord[];
+  /** Account id this profile was last synced to, so signing in as a different
+   *  farmer on a shared device doesn't inherit someone else's saved farm. */
+  syncedUserId?: string;
 }
 
 /** Shape persisted by the first onboarding flow, kept only for migration. */

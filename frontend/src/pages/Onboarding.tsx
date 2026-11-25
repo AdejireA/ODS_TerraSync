@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFarm } from "../contexts/FarmContext";
+import { useAuth } from "../contexts/AuthContext";
 import { STATE_PROFILES, getLgasForState, isStateActive } from "../data/locations";
 import { CROP_PROFILES, cropName } from "../data/crops";
 import {
@@ -25,7 +26,8 @@ type GeoStatus = "idle" | "detecting" | "granted" | "denied" | "unsupported";
 
 export function Onboarding() {
   const { t, language } = useLanguage();
-  const { profile, setProfile } = useFarm();
+  const { profile, setProfile, saveError } = useFarm();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>(profile ? "summary" : "location");
@@ -105,13 +107,20 @@ export function Onboarding() {
   }
 
   function finish() {
-    const crops: FarmCropRecord[] = selectedCropIds.map((cropId) => ({
-      id: `${cropId}-${Math.random().toString(36).slice(2, 10)}`,
-      cropId,
-      ...(cropDrafts[cropId] ?? emptyCropDraft()),
-    }));
+    // Reuse each crop's existing local id (when editing) instead of minting a
+    // fresh one every save, so edits update the same record rather than
+    // reading as a brand new crop.
+    const existingByCropId = new Map((profile?.crops ?? []).map((crop) => [crop.cropId, crop]));
+    const crops: FarmCropRecord[] = selectedCropIds.map((cropId) => {
+      const existing = existingByCropId.get(cropId);
+      return {
+        id: existing?.id ?? `${cropId}-${Math.random().toString(36).slice(2, 10)}`,
+        cropId,
+        ...(cropDrafts[cropId] ?? emptyCropDraft()),
+      };
+    });
 
-    setProfile({
+    const nextProfile = {
       version: FARM_PROFILE_VERSION,
       farmName: farmName || t("appTitle"),
       state,
@@ -124,7 +133,10 @@ export function Onboarding() {
       soilType,
       waterSource,
       crops,
-    });
+    };
+    // setProfile persists locally (guest) or saves to the account (signed in
+    // farmer) via FarmContext; no separate sync step is needed here.
+    setProfile(nextProfile);
     navigate("/dashboard");
   }
 
@@ -324,19 +336,13 @@ export function Onboarding() {
                   key={option.id}
                   type="button"
                   onClick={() => toggleCrop(option.id)}
-                  className={`overflow-hidden rounded-md border text-left ${
+                  className={`rounded-md border p-3 text-left ${
                     selected
                       ? "border-primary bg-primary-light"
                       : "border-border bg-card"
                   }`}
                 >
-                  <img
-                    src={option.image}
-                    alt=""
-                    className="h-20 w-full object-cover"
-                    loading="lazy"
-                  />
-                  <span className="block p-2 text-sm font-medium">{cropName(option.id, language)}</span>
+                  <span className="text-sm font-medium">{cropName(option.id, language)}</span>
                 </button>
               );
             })}
@@ -402,14 +408,11 @@ export function Onboarding() {
 
           <Card className="space-y-2">
             <p className="font-semibold">{farmName || t("appTitle")}</p>
-            <p className="text-sm text-muted-foreground">{lga}, {state}</p>
             <p className="text-sm text-muted-foreground">
-              {community || t("onboardingNoCommunity")}
+              {community ? `${community}, ` : ""}{lga}, {state}
             </p>
             <p className="text-metadata">
-              {latitude != null && longitude != null
-                ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-                : t("onboardingNoCoordinates")}
+              {isAuthenticated ? t("farmSyncSynced") : t("farmSyncLocalOnly")}
             </p>
             <button
               type="button"
@@ -459,12 +462,20 @@ export function Onboarding() {
             {t("onboardingAddCrop")}
           </Button>
 
+          {isAuthenticated && saveError && (
+            <p className="text-sm text-destructive">{t("farmSyncError")}</p>
+          )}
+
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1" onClick={() => setStep("location")}>
               {t("onboardingEditFarm")}
             </Button>
-            <Button className="flex-1" onClick={finish} disabled={selectedCropIds.length === 0}>
-              {profile ? t("onboardingSaveChanges") : t("onboardingFinish")}
+            <Button
+              className="flex-1"
+              onClick={finish}
+              disabled={selectedCropIds.length === 0}
+            >
+              {t(profile ? "onboardingSaveChanges" : "onboardingFinish")}
             </Button>
           </div>
         </div>

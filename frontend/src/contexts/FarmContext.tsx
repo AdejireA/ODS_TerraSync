@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "./AuthContext";
-import { getAuthToken } from "../lib/api";
+import { getFarmProfile, putFarmProfile } from "../lib/api";
 import {
   FARM_PROFILE_VERSION,
   isLegacyFarmProfile,
@@ -19,6 +19,8 @@ interface FarmContextValue {
   updateCrop: (id: string, patch: Partial<Omit<FarmCropRecord, "id">>) => void;
   removeCrop: (id: string) => void;
   clearProfile: () => void;
+  /** Set when the most recent save to the account failed (profile is still kept locally). */
+  saveError: string;
 }
 
 const FarmContext = createContext<FarmContextValue | null>(null);
@@ -45,7 +47,7 @@ function readStoredProfile(): FarmProfile | null {
   }
 }
 
-function persist(profile: FarmProfile | null) {
+function persistLocal(profile: FarmProfile | null) {
   try {
     if (profile) localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
     else localStorage.removeItem(STORAGE_KEY);
@@ -54,36 +56,49 @@ function persist(profile: FarmProfile | null) {
   }
 }
 
-export function FarmProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  return <FarmProviderForUser key={user?.id ?? "guest"} userId={user?.role === "farmer" ? user.id : null}>{children}</FarmProviderForUser>;
-}
-
+// A signed-in farmer's profile lives server-side as one JSON blob
+// (GET/PUT /farms/profile) instead of localStorage. Remounting this
+// component per user id (see FarmProvider below) is what keeps one
+// farmer's data from leaking into another's session on a shared device —
+// each sign-in starts a fresh provider instance with its own state.
 function FarmProviderForUser({ children, userId }: { children: ReactNode; userId: string | null }) {
-  const [profile, setProfileState] = useState<FarmProfile | null>(() => userId || getAuthToken() ? null : readStoredProfile());
+  const [profile, setProfileState] = useState<FarmProfile | null>(() => (userId ? null : readStoredProfile()));
   const [ready, setReady] = useState(!userId);
-  const [error, setError] = useState("");
-  const queue = useRef(Promise.resolve());
+  const [saveError, setSaveError] = useState("");
+  const saveQueue = useRef(Promise.resolve());
 
   useEffect(() => {
     if (!userId) return;
     let active = true;
-    const token = getAuthToken();
-    fetch('/api/v1/farms/profile', { headers: { Authorization: `Bearer ${token}` } })
-      .then((response) => { if (!response.ok) throw new Error('Unable to load your farm profile.'); return response.json(); })
-      .then((data) => { if (active) { setProfileState(data.profile); setReady(true); } })
-      .catch(() => { if (active) setError('Unable to load your farm profile. Please refresh and try again.'); });
-    return () => { active = false; };
+    getFarmProfile<FarmProfile>()
+      .then((data) => {
+        if (active) {
+          setProfileState(data.profile);
+          setReady(true);
+        }
+      })
+      .catch(() => {
+        if (active) setSaveError("Unable to load your farm profile. Please refresh and try again.");
+      });
+    return () => {
+      active = false;
+    };
   }, [userId]);
 
   function save(next: FarmProfile | null) {
-    if (!userId) { persist(next); return; }
-    const token = getAuthToken();
-    queue.current = queue.current.catch(() => {}).then(async () => {
-      const response = await fetch('/api/v1/farms/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ profile: next }) });
-      if (!response.ok) throw new Error('Save failed');
-      setError('');
-    }).catch(() => { setError('Your farm changes could not be saved. Please try again.'); });
+    if (!userId) {
+      persistLocal(next);
+      return;
+    }
+    saveQueue.current = saveQueue.current
+      .catch(() => {})
+      .then(async () => {
+        await putFarmProfile(next);
+        setSaveError("");
+      })
+      .catch(() => {
+        setSaveError("Your farm changes could not be saved. Please try again.");
+      });
   }
 
   const setProfile = (next: FarmProfile) => {
@@ -136,11 +151,25 @@ function FarmProviderForUser({ children, userId }: { children: ReactNode; userId
   };
 
   const value = useMemo(
-    () => ({ profile, setProfile, updateProfile, addCrop, updateCrop, removeCrop, clearProfile }),
-    [profile],
+    () => ({ profile, setProfile, updateProfile, addCrop, updateCrop, removeCrop, clearProfile, saveError }),
+    [profile, saveError],
   );
 
-  return <FarmContext.Provider value={value}>{error && <div role="alert">{error}</div>}{ready ? children : !error && <div>Loading your farm profile…</div>}</FarmContext.Provider>;
+  if (userId && !ready && !saveError) {
+    return <div className="app-container py-section text-center text-sm text-muted-foreground">Loading your farm profile…</div>;
+  }
+
+  return <FarmContext.Provider value={value}>{children}</FarmContext.Provider>;
+}
+
+export function FarmProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const userId = user?.role === "farmer" ? user.id : null;
+  return (
+    <FarmProviderForUser key={userId ?? "guest"} userId={userId}>
+      {children}
+    </FarmProviderForUser>
+  );
 }
 
 export function useFarm() {

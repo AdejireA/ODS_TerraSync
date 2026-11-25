@@ -29,6 +29,11 @@ export class ApiError extends Error {
   }
 }
 
+// Fired when a request sent a bearer token and the server rejected it (expired
+// or invalid). AuthContext listens for this to clear the session and send the
+// farmer back to the login screen, instead of leaving a dead token around.
+export const AUTH_EXPIRED_EVENT = "terrasync:auth-expired";
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAuthToken();
   const response = await fetch(`${BASE_URL}${path}`, {
@@ -47,6 +52,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       if (typeof detail === "string") message = detail;
     } catch {
       // Non-JSON error body; keep the raw text.
+    }
+    if (response.status === 401 && token) {
+      setAuthToken(null);
+      window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
     }
     throw new ApiError(response.status, message);
   }
@@ -175,6 +184,21 @@ export function updateFarm(farmId: string, input: FarmInput) {
 
 export function getFarm(farmId: string) {
   return request<BackendFarm>(`/farms/${farmId}`);
+}
+
+// Whole-profile store (GET/PUT /farms/profile): the frontend's multi-crop
+// FarmProfile saved as one JSON blob per farmer, separate from the
+// one-crop-per-farm `/farms` rows above. This is what FarmContext persists
+// onboarding to; the `/farms` rows remain for voice/insights farm_id lookups.
+export function getFarmProfile<T>() {
+  return request<{ profile: T | null }>("/farms/profile");
+}
+
+export function putFarmProfile<T>(profile: T | null) {
+  return request<{ profile: T | null }>("/farms/profile", {
+    method: "PUT",
+    body: JSON.stringify({ profile }),
+  });
 }
 
 // ---------------------------------------------------------------- insights
