@@ -1,172 +1,174 @@
 #!/usr/bin/env bash
-# Installs a frontend build on the Nobus VM behind nginx.
-#   - Serves /opt/terrasync/frontend/current (SPA, index.html fallback)
-#   - Proxies /api/ and /health to the API on 127.0.0.1:8000
-#   - Optional HTTPS when TERRASYNC_DOMAIN and TERRASYNC_CERT_EMAIL are set
-# Rolls back the release and nginx site if the config test or smoke check fails.
+# Installs a frontend build on the Nobus VM.
+#   - Release files: /opt/terrasync/frontend/releases/<ts>, served from .../current
+#   - Web server: Caddy if it already owns port 80 (the VM's existing setup),
+#     otherwise nginx. Either way /api/* and /health go to the API on 127.0.0.1:8000.
+#   - HTTPS: set TERRASYNC_DOMAIN (Caddy issues certificates automatically;
+#     nginx uses certbot and also needs TERRASYNC_CERT_EMAIL).
+# Rolls back the release and web-server config on any failure.
 set -euo pipefail
 archive=${1:?Supply frontend archive path}
 domain=${TERRASYNC_DOMAIN:-}
 email=${TERRASYNC_CERT_EMAIL:-}
 root=/opt/terrasync/frontend
 release="$root/releases/$(date -u +%Y%m%d%H%M%S)-$$"
-site=/etc/nginx/sites-available/terrasync
-enabled=/etc/nginx/sites-enabled/terrasync
+MARKER="# managed by TerraSync frontend/deploy/install.sh"
 
-# Refuse to take over port 80/443 from another service; report who owns it instead.
+port_owner() { sudo ss -ltnpH "( sport = :$1 )" 2>/dev/null | grep -oE '"[^"]+"' | head -n1 | tr -d '"' || true; }
+
+server=nginx
 for port in 80 443; do
-    owner=$(sudo ss -ltnpH "( sport = :$port )" 2>/dev/null | grep -v '"nginx"' || true)
-    if [ -n "$owner" ]; then
-        echo "ERROR: port $port is already used by another service:" >&2
-        echo "$owner" >&2
-        for pid in $(echo "$owner" | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u); do
-            ps -o pid=,user=,cmd= -p "$pid" >&2 || true
-            systemctl status "$pid" --no-pager 2>/dev/null | head -n 3 >&2 || true
-        done
-        if command -v docker >/dev/null 2>&1; then sudo docker ps --format '{{.Names}} {{.Image}} {{.Ports}}' >&2 || true; fi
-        # A previous failed run may have left nginx installed but stopped; keep it from retrying.
-        if ! systemctl is-active --quiet nginx 2>/dev/null; then sudo systemctl disable nginx >/dev/null 2>&1 || true; fi
-        exit 1
-    fi
+    owner=$(port_owner "$port")
+    case "$owner" in
+        ""|nginx) ;;
+        caddy) server=caddy ;;
+        *)
+            echo "ERROR: port $port is used by '$owner'; not taking it over." >&2
+            sudo ss -ltnpH "( sport = :$port )" >&2 || true
+            exit 1 ;;
+    esac
 done
+echo "Web server: $server"
 
+# ---------------------------------------------------------------- release
 sudo mkdir -p "$root/releases"
-sudo chown ubuntu:ubuntu /opt/terrasync "$root" "$root/releases" 2>/dev/null || sudo chown ubuntu:ubuntu "$root" "$root/releases"
+sudo chown ubuntu:ubuntu "$root" "$root/releases"
 mkdir -p "$release"
 tar -xzf "$archive" -C "$release"
 test -f "$release/index.html" || { echo "Build has no index.html" >&2; exit 1; }
-# nginx (www-data) must be able to read the files and traverse the parents.
 chmod -R a+rX "$release"
 sudo chmod o+x /opt/terrasync "$root" "$root/releases"
+previous_release=$(readlink -f "$root/current" 2>/dev/null || true)
 
-if ! command -v nginx >/dev/null 2>&1; then
-    sudo apt-get update -y
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
-fi
-
-cert_dir=""
-if [ -n "$domain" ] && [ -n "$email" ]; then
-    if ! command -v certbot >/dev/null 2>&1; then
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y certbot python3-certbot-nginx
+restore_release() {
+    if [ -n "$previous_release" ] && [ -d "$previous_release" ]; then
+        ln -sfn "$previous_release" "$root/current-next" && mv -Tf "$root/current-next" "$root/current"
     fi
-    if [ -f "/etc/letsencrypt/live/$domain/fullchain.pem" ] || \
-       sudo certbot certonly --nginx -d "$domain" --non-interactive --agree-tos -m "$email" --keep-until-expiring; then
-        cert_dir="/etc/letsencrypt/live/$domain"
-    else
-        echo "WARNING: could not obtain a certificate for $domain; serving HTTP only." >&2
-    fi
-fi
+}
 
-server_name=${domain:-_}
-app_locations=$(cat <<'LOC'
+ln -sfn "$release" "$root/current-next"
+mv -Tf "$root/current-next" "$root/current"
+
+# ------------------------------------------------------------------ caddy
+deploy_caddy() {
+    local cf=/etc/caddy/Caddyfile backup new addr sites
+    echo "----- existing $cf -----"
+    sudo cat "$cf" || true
+    echo "------------------------"
+
+    if ! sudo grep -qF "$MARKER" "$cf"; then
+        # Only adopt a Caddyfile that is a single site proxying to the API.
+        sites=$(sudo grep -cE '^[^#[:space:]({][^{]*\{[[:space:]]*$' "$cf" || true)
+        unknown=$(sudo grep -vE '^[[:space:]]*(#.*)?$|^[[:space:]]*[{}][[:space:]]*$|^[^#[:space:]({][^{]*\{[[:space:]]*$|^[[:space:]]*reverse_proxy[[:space:]]+(http://)?(127\.0\.0\.1|localhost):8000[[:space:]]*$|^[[:space:]]*(encode|log)\b.*$|^[[:space:]]*root[[:space:]]+\*[[:space:]]+/usr/share/caddy[[:space:]]*$|^[[:space:]]*file_server[[:space:]]*$' "$cf" || true)
+        if [ "$sites" != "1" ] || [ -n "$unknown" ]; then
+            echo "ERROR: $cf has other configuration; not replacing it automatically." >&2
+            [ -n "$unknown" ] && { echo "Unrecognised lines:" >&2; echo "$unknown" >&2; }
+            restore_release
+            exit 1
+        fi
+    fi
+    addr=$(sudo grep -m1 -E '^[^#[:space:]({][^{]*\{[[:space:]]*$' "$cf" | sed -E 's/[[:space:]]*\{[[:space:]]*$//')
+    [ -n "$domain" ] && addr="$domain"
+    [ -n "$addr" ] || addr=":80"
+
+    new=$(mktemp)
+    cat > "$new" <<CADDY
+$MARKER
+$addr {
+	encode zstd gzip
+	@api path /api/* /health
+	handle @api {
+		reverse_proxy 127.0.0.1:8000
+	}
+	handle {
+		root * /opt/terrasync/frontend/current
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		header /index.html Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
+CADDY
+    sudo caddy validate --config "$new" --adapter caddyfile
+    backup="$cf.bak-$(date -u +%Y%m%d%H%M%S)"
+    sudo cp "$cf" "$backup"
+    sudo cp "$new" "$cf"
+    sudo chmod 644 "$cf"
+    if ! sudo systemctl reload caddy; then
+        echo "Caddy reload failed; restoring $backup" >&2
+        sudo cp "$backup" "$cf"; sudo systemctl reload caddy || true
+        restore_release; exit 1
+    fi
+    # Leftover from an earlier nginx attempt: keep it from fighting for port 80.
+    if systemctl list-unit-files nginx.service >/dev/null 2>&1; then
+        sudo systemctl disable --now nginx >/dev/null 2>&1 || true
+    fi
+    SITE_ADDR="$addr"; CADDY_BACKUP="$backup"
+}
+
+# ------------------------------------------------------------------ nginx
+deploy_nginx() {
+    local site=/etc/nginx/sites-available/terrasync enabled=/etc/nginx/sites-enabled/terrasync
+    if ! command -v nginx >/dev/null 2>&1; then
+        sudo apt-get update -y
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+    fi
+    cat > /tmp/terrasync-nginx.conf <<'CONF'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
     root /opt/terrasync/frontend/current;
     index index.html;
-    client_max_body_size 2m;
-
     location /api/ {
         proxy_pass http://127.0.0.1:8000;
-        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 30s;
     }
-    location = /health {
-        proxy_pass http://127.0.0.1:8000/health;
-    }
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        try_files $uri =404;
-    }
-    location / {
-        add_header Cache-Control "no-cache";
-        try_files $uri $uri/ /index.html;
-    }
-LOC
-)
-
-new_site=$(mktemp)
-if [ -n "$cert_dir" ]; then
-    cat > "$new_site" <<CONF
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    server_name $server_name;
-    location /.well-known/acme-challenge/ { root /var/www/html; }
-    location / { return 301 https://\$host\$request_uri; }
-}
-server {
-    listen 443 ssl default_server;
-    listen [::]:443 ssl default_server;
-    server_name $server_name;
-    ssl_certificate $cert_dir/fullchain.pem;
-    ssl_certificate_key $cert_dir/privkey.pem;
-$app_locations
+    location = /health { proxy_pass http://127.0.0.1:8000/health; }
+    location /assets/ { expires 1y; add_header Cache-Control "public, immutable"; try_files $uri =404; }
+    location / { add_header Cache-Control "no-cache"; try_files $uri $uri/ /index.html; }
 }
 CONF
-else
-    cat > "$new_site" <<CONF
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    server_name $server_name;
-$app_locations
-}
-CONF
-fi
-
-previous_release=$(readlink -f "$root/current" 2>/dev/null || true)
-previous_site=$(mktemp)
-had_site=false
-if [ -f "$site" ]; then sudo cp "$site" "$previous_site"; had_site=true; fi
-removed_default=false
-
-rollback() {
-    echo "Rolling back frontend deploy" >&2
-    if [ -n "$previous_release" ] && [ -d "$previous_release" ]; then
-        ln -sfn "$previous_release" "$root/current-next" && mv -Tf "$root/current-next" "$root/current"
+    sudo cp /tmp/terrasync-nginx.conf "$site"
+    sudo ln -sfn "$site" "$enabled"
+    sudo rm -f /etc/nginx/sites-enabled/default
+    if ! sudo nginx -t; then sudo rm -f "$enabled"; restore_release; exit 1; fi
+    sudo systemctl enable nginx >/dev/null
+    sudo systemctl reload nginx 2>/dev/null || sudo systemctl restart nginx
+    if [ -n "$domain" ] && [ -n "$email" ]; then
+        command -v certbot >/dev/null 2>&1 || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y certbot python3-certbot-nginx
+        sudo certbot --nginx -d "$domain" --non-interactive --agree-tos -m "$email" --redirect --keep-until-expiring \
+            || echo "WARNING: certificate for $domain failed; serving HTTP only." >&2
     fi
-    if [ "$had_site" = true ]; then sudo cp "$previous_site" "$site"; else sudo rm -f "$site" "$enabled"; fi
-    if [ "$removed_default" = true ]; then sudo ln -sfn /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default; fi
-    sudo nginx -t >/dev/null 2>&1 && sudo systemctl reload nginx || true
+    SITE_ADDR="${domain:-:80}"; CADDY_BACKUP=""
 }
 
-trap 'rollback' ERR
-sudo cp "$new_site" "$site"
-sudo ln -sfn "$site" "$enabled"
-# The stock Ubuntu default site also claims default_server on port 80.
-if [ -L /etc/nginx/sites-enabled/default ]; then
-    sudo rm /etc/nginx/sites-enabled/default
-    removed_default=true
-fi
-ln -sfn "$release" "$root/current-next"
-mv -Tf "$root/current-next" "$root/current"
+SITE_ADDR=""; CADDY_BACKUP=""
+if [ "$server" = caddy ]; then deploy_caddy; else deploy_nginx; fi
 
-if ! sudo nginx -t; then
-    echo "nginx config test failed (another site may already use port 80)." >&2
-    rollback
+# ------------------------------------------------------------ smoke check
+host_part=${SITE_ADDR#http://}; host_part=${host_part#https://}; host_part=${host_part%%/*}
+if [ -z "$host_part" ] || [[ "$host_part" == :* ]] || [[ "$host_part" =~ ^[0-9.]+(:[0-9]+)?$ ]] || [[ "$SITE_ADDR" == http://* ]]; then
+    port=${host_part##*:}; [[ "$host_part" == *:* ]] || port=80
+    url="http://127.0.0.1:$port"; curl_extra=()
+else
+    url="https://$host_part"; curl_extra=(--resolve "$host_part:443:127.0.0.1")
+fi
+ok=true
+curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-all-errors "${curl_extra[@]}" "$url/" | grep -q 'id="root"' || ok=false
+if [ "$ok" = false ]; then
+    echo "Frontend smoke check failed at $url" >&2
+    if [ -n "$CADDY_BACKUP" ]; then sudo cp "$CADDY_BACKUP" /etc/caddy/Caddyfile; sudo systemctl reload caddy || true; fi
+    restore_release
     exit 1
 fi
-sudo systemctl enable nginx >/dev/null
-sudo systemctl reload nginx 2>/dev/null || sudo systemctl restart nginx
-trap - ERR
+curl --fail --silent --retry 5 --retry-delay 1 "${curl_extra[@]}" -o /dev/null "$url/api/v1/locations" \
+    && echo "API reachable through $server at $url/api/v1" \
+    || echo "WARNING: frontend is up but $url/api/v1/locations did not respond." >&2
 
-scheme=http
-[ -n "$cert_dir" ] && scheme=https
-check_host=${domain:-127.0.0.1}
-curl_opts=(--fail --silent --show-error --retry 5 --retry-delay 1)
-[ -z "$cert_dir" ] || curl_opts+=(--resolve "$check_host:443:127.0.0.1")
-if ! curl "${curl_opts[@]}" "$scheme://$check_host/" | grep -q 'id="root"'; then
-    echo "Frontend smoke check failed" >&2
-    rollback
-    exit 1
-fi
-if ! curl "${curl_opts[@]}" -o /dev/null "$scheme://$check_host/api/v1/locations"; then
-    echo "WARNING: frontend is up but /api/v1/locations did not respond through nginx." >&2
-fi
-
-# Keep the five most recent releases.
 ls -1dt "$root"/releases/* 2>/dev/null | tail -n +6 | xargs -r rm -rf
-printf 'TerraSync frontend live at %s://%s (release %s)\n' "$scheme" "${domain:-<server IP>}" "$release"
+echo "TerraSync frontend live via $server (site address: $SITE_ADDR, release $release)"
