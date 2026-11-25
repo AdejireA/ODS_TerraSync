@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFarm } from "../contexts/FarmContext";
 import { cropName } from "../data/crops";
+import { plantingStatusKey } from "../data/farmOptions";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { NotAvailableState } from "../components/ui/StatusStates";
@@ -22,11 +23,20 @@ export function Dashboard() {
 
   return (
     <div className="app-container space-y-section py-section">
-      <div>
-        <p className="text-sm text-muted-foreground">{t("dashboardGreeting")},</p>
-        <h2 className="text-page-title text-primary">{profile.farmName}</h2>
-        <p className="text-sm text-muted-foreground">{profile.lga}, {profile.state}</p>
-        <p className="text-metadata italic">{t("deviceLocalNotice")}</p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-sm text-muted-foreground">{t("dashboardGreeting")},</p>
+          <h2 className="text-page-title text-primary">{profile.farmName}</h2>
+          <p className="text-sm text-muted-foreground">{profile.lga}, {profile.state}</p>
+          <p className="text-metadata italic">{t("deviceLocalNotice")}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate("/onboarding")}
+          className="shrink-0 text-sm font-medium text-primary underline"
+        >
+          {t("onboardingEditFarm")}
+        </button>
       </div>
 
       <Button className="w-full" onClick={() => navigate("/voice")}>
@@ -46,9 +56,10 @@ export function Dashboard() {
       <section className="space-y-row">
         <h3 className="text-section-heading text-primary">{t("dashboardMyCrops")}</h3>
         <div className="grid grid-cols-2 gap-2">
-          {profile.crops.map((cropId) => (
-            <Card key={cropId}>
-              <p className="text-sm font-medium">{cropName(cropId, language)}</p>
+          {profile.crops.map((crop) => (
+            <Card key={crop.id}>
+              <p className="text-sm font-medium">{cropName(crop.cropId, language)}</p>
+              <p className="text-metadata">{t(plantingStatusKey(crop.status))}</p>
             </Card>
           ))}
         </div>
