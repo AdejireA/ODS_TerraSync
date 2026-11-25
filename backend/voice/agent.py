@@ -217,6 +217,10 @@ async def entrypoint(ctx: agents.JobContext):
         stt=spitch.STT(language=language),
         llm=inference.LLM(model=os.getenv("TERRASYNC_LLM_MODEL", "google/gemma-4-31b-it")),
         tts=spitch.TTS(language=language, voice=VOICES[language]),
+        # Spitch STT can finalise after the VAD sees silence; wait a little longer
+        # before ending the caller's turn so transcripts are not cut off.
+        min_endpointing_delay=0.8,
+        max_endpointing_delay=4.0,
     )
 
     if store:
