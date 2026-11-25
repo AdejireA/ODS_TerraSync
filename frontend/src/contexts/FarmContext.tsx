@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useAuth } from "./AuthContext";
+import { getFarmProfile, putFarmProfile } from "../lib/api";
 import {
   FARM_PROFILE_VERSION,
   isLegacyFarmProfile,
@@ -6,12 +8,8 @@ import {
   type FarmCropRecord,
   type FarmProfile,
 } from "../types/farm";
-import { useAuth } from "./AuthContext";
-import { backendFarmsToProfile, listFarms, syncProfileToBackend } from "../lib/farmSync";
 
 const STORAGE_KEY = "terrasync-farm-profile";
-
-export type SyncStatus = "idle" | "syncing" | "synced" | "error";
 
 interface FarmContextValue {
   profile: FarmProfile | null;
@@ -21,12 +19,8 @@ interface FarmContextValue {
   updateCrop: (id: string, patch: Partial<Omit<FarmCropRecord, "id">>) => void;
   removeCrop: (id: string) => void;
   clearProfile: () => void;
-  /** Push a profile (defaults to the current one) to the signed-in farmer's
-   *  backend farm records. Pass the just-built profile explicitly right after
-   *  calling setProfile, since React state updates aren't synchronous. */
-  syncToBackend: (explicitProfile?: FarmProfile) => Promise<void>;
-  syncStatus: SyncStatus;
-  syncErrors: { cropId: string; message: string }[];
+  /** Set when the most recent save to the account failed (profile is still kept locally). */
+  saveError: string;
 }
 
 const FarmContext = createContext<FarmContextValue | null>(null);
@@ -53,7 +47,7 @@ function readStoredProfile(): FarmProfile | null {
   }
 }
 
-function persist(profile: FarmProfile | null) {
+function persistLocal(profile: FarmProfile | null) {
   try {
     if (profile) localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
     else localStorage.removeItem(STORAGE_KEY);
@@ -62,23 +56,61 @@ function persist(profile: FarmProfile | null) {
   }
 }
 
-export function FarmProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfileState] = useState<FarmProfile | null>(readStoredProfile);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
-  const [syncErrors, setSyncErrors] = useState<{ cropId: string; message: string }[]>([]);
-  const { user, isAuthenticated } = useAuth();
-  const hydratedForUser = useRef<string | null>(null);
+// A signed-in farmer's profile lives server-side as one JSON blob
+// (GET/PUT /farms/profile) instead of localStorage. Remounting this
+// component per user id (see FarmProvider below) is what keeps one
+// farmer's data from leaking into another's session on a shared device —
+// each sign-in starts a fresh provider instance with its own state.
+function FarmProviderForUser({ children, userId }: { children: ReactNode; userId: string | null }) {
+  const [profile, setProfileState] = useState<FarmProfile | null>(() => (userId ? null : readStoredProfile()));
+  const [ready, setReady] = useState(!userId);
+  const [saveError, setSaveError] = useState("");
+  const saveQueue = useRef(Promise.resolve());
+
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    getFarmProfile<FarmProfile>()
+      .then((data) => {
+        if (active) {
+          setProfileState(data.profile);
+          setReady(true);
+        }
+      })
+      .catch(() => {
+        if (active) setSaveError("Unable to load your farm profile. Please refresh and try again.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
+  function save(next: FarmProfile | null) {
+    if (!userId) {
+      persistLocal(next);
+      return;
+    }
+    saveQueue.current = saveQueue.current
+      .catch(() => {})
+      .then(async () => {
+        await putFarmProfile(next);
+        setSaveError("");
+      })
+      .catch(() => {
+        setSaveError("Your farm changes could not be saved. Please try again.");
+      });
+  }
 
   const setProfile = (next: FarmProfile) => {
     setProfileState(next);
-    persist(next);
+    save(next);
   };
 
   const updateProfile = (patch: Partial<Omit<FarmProfile, "version" | "crops">>) => {
     setProfileState((current) => {
       if (!current) return current;
       const next = { ...current, ...patch };
-      persist(next);
+      save(next);
       return next;
     });
   };
@@ -87,7 +119,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     setProfileState((current) => {
       if (!current) return current;
       const next = { ...current, crops: [...current.crops, { ...crop, id: generateId(crop.cropId) }] };
-      persist(next);
+      save(next);
       return next;
     });
   };
@@ -99,7 +131,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
         ...current,
         crops: current.crops.map((crop) => (crop.id === id ? { ...crop, ...patch } : crop)),
       };
-      persist(next);
+      save(next);
       return next;
     });
   };
@@ -108,77 +140,36 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     setProfileState((current) => {
       if (!current) return current;
       const next = { ...current, crops: current.crops.filter((crop) => crop.id !== id) };
-      persist(next);
+      save(next);
       return next;
     });
   };
 
   const clearProfile = () => {
     setProfileState(null);
-    persist(null);
+    save(null);
   };
 
-  async function syncToBackend(explicitProfile?: FarmProfile) {
-    const target = explicitProfile ?? profile;
-    if (!isAuthenticated || !user || user.role !== "farmer" || !target) return;
-    setSyncStatus("syncing");
-    try {
-      const { crops, errors } = await syncProfileToBackend(target);
-      const next = { ...target, crops, syncedUserId: user.id };
-      setProfileState(next);
-      persist(next);
-      setSyncErrors(errors);
-      setSyncStatus(errors.length > 0 ? "error" : "synced");
-    } catch {
-      setSyncStatus("error");
-    }
-  }
-
-  // A signed-in farmer's backend records are authoritative for their account.
-  // On sign-in: if this profile was synced to a *different* account (shared
-  // device), drop it rather than show one farmer's data to another. Then, if
-  // there's no local profile at all, pull the farmer's saved records — this
-  // only ever reads and replaces an *empty* local state, never a local draft
-  // the farmer hasn't pushed yet.
-  useEffect(() => {
-    if (!isAuthenticated || !user || user.role !== "farmer") return;
-    if (hydratedForUser.current === user.id) return;
-    hydratedForUser.current = user.id;
-
-    if (profile?.syncedUserId && profile.syncedUserId !== user.id) {
-      clearProfile();
-    }
-
-    if (!profile || profile.crops.length === 0) {
-      listFarms()
-        .then((farms) => {
-          const hydrated = backendFarmsToProfile(farms, user.id);
-          if (hydrated) setProfile(hydrated);
-        })
-        .catch(() => {
-          // Backend unreachable or no saved farms; keep using local state.
-        });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, user?.id]);
-
   const value = useMemo(
-    () => ({
-      profile,
-      setProfile,
-      updateProfile,
-      addCrop,
-      updateCrop,
-      removeCrop,
-      clearProfile,
-      syncToBackend,
-      syncStatus,
-      syncErrors,
-    }),
-    [profile, syncStatus, syncErrors],
+    () => ({ profile, setProfile, updateProfile, addCrop, updateCrop, removeCrop, clearProfile, saveError }),
+    [profile, saveError],
   );
 
+  if (userId && !ready && !saveError) {
+    return <div className="app-container py-section text-center text-sm text-muted-foreground">Loading your farm profile…</div>;
+  }
+
   return <FarmContext.Provider value={value}>{children}</FarmContext.Provider>;
+}
+
+export function FarmProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const userId = user?.role === "farmer" ? user.id : null;
+  return (
+    <FarmProviderForUser key={userId ?? "guest"} userId={userId}>
+      {children}
+    </FarmProviderForUser>
+  );
 }
 
 export function useFarm() {

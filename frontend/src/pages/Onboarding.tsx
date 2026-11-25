@@ -26,10 +26,9 @@ type GeoStatus = "idle" | "detecting" | "granted" | "denied" | "unsupported";
 
 export function Onboarding() {
   const { t, language } = useLanguage();
-  const { profile, setProfile, syncToBackend, syncStatus, syncErrors } = useFarm();
+  const { profile, setProfile, saveError } = useFarm();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [submitting, setSubmitting] = useState(false);
 
   const [step, setStep] = useState<Step>(profile ? "summary" : "location");
 
@@ -107,10 +106,10 @@ export function Onboarding() {
     setCropDrafts((current) => ({ ...current, [cropId]: { ...current[cropId], ...patch } }));
   }
 
-  async function finish() {
-    // Reuse each crop's existing local id and backend farm id (when editing)
-    // instead of minting fresh ones, so a repeat save updates the same
-    // backend farm record rather than creating a duplicate.
+  function finish() {
+    // Reuse each crop's existing local id (when editing) instead of minting a
+    // fresh one every save, so edits update the same record rather than
+    // reading as a brand new crop.
     const existingByCropId = new Map((profile?.crops ?? []).map((crop) => [crop.cropId, crop]));
     const crops: FarmCropRecord[] = selectedCropIds.map((cropId) => {
       const existing = existingByCropId.get(cropId);
@@ -118,7 +117,6 @@ export function Onboarding() {
         id: existing?.id ?? `${cropId}-${Math.random().toString(36).slice(2, 10)}`,
         cropId,
         ...(cropDrafts[cropId] ?? emptyCropDraft()),
-        backendFarmId: existing?.backendFarmId,
       };
     });
 
@@ -136,16 +134,9 @@ export function Onboarding() {
       waterSource,
       crops,
     };
+    // setProfile persists locally (guest) or saves to the account (signed in
+    // farmer) via FarmContext; no separate sync step is needed here.
     setProfile(nextProfile);
-
-    if (isAuthenticated) {
-      setSubmitting(true);
-      try {
-        await syncToBackend(nextProfile);
-      } finally {
-        setSubmitting(false);
-      }
-    }
     navigate("/dashboard");
   }
 
@@ -421,7 +412,7 @@ export function Onboarding() {
               {community ? `${community}, ` : ""}{lga}, {state}
             </p>
             <p className="text-metadata">
-              {isAuthenticated && profile?.syncedUserId ? t("farmSyncSynced") : t("farmSyncLocalOnly")}
+              {isAuthenticated ? t("farmSyncSynced") : t("farmSyncLocalOnly")}
             </p>
             <button
               type="button"
@@ -471,7 +462,7 @@ export function Onboarding() {
             {t("onboardingAddCrop")}
           </Button>
 
-          {isAuthenticated && syncStatus === "error" && syncErrors.length > 0 && (
+          {isAuthenticated && saveError && (
             <p className="text-sm text-destructive">{t("farmSyncError")}</p>
           )}
 
@@ -481,12 +472,10 @@ export function Onboarding() {
             </Button>
             <Button
               className="flex-1"
-              onClick={() => void finish()}
-              disabled={selectedCropIds.length === 0 || submitting}
+              onClick={finish}
+              disabled={selectedCropIds.length === 0}
             >
-              {submitting
-                ? t("farmSyncSyncing")
-                : t(profile ? "onboardingSaveChanges" : "onboardingFinish")}
+              {t(profile ? "onboardingSaveChanges" : "onboardingFinish")}
             </Button>
           </div>
         </div>

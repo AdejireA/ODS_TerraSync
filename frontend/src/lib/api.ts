@@ -186,6 +186,21 @@ export function getFarm(farmId: string) {
   return request<BackendFarm>(`/farms/${farmId}`);
 }
 
+// Whole-profile store (GET/PUT /farms/profile): the frontend's multi-crop
+// FarmProfile saved as one JSON blob per farmer, separate from the
+// one-crop-per-farm `/farms` rows above. This is what FarmContext persists
+// onboarding to; the `/farms` rows remain for voice/insights farm_id lookups.
+export function getFarmProfile<T>() {
+  return request<{ profile: T | null }>("/farms/profile");
+}
+
+export function putFarmProfile<T>(profile: T | null) {
+  return request<{ profile: T | null }>("/farms/profile", {
+    method: "PUT",
+    body: JSON.stringify({ profile }),
+  });
+}
+
 // ---------------------------------------------------------------- insights
 
 export interface InsightItem {
@@ -201,8 +216,8 @@ export interface InsightItem {
   evidence: { source_title: string; source_url: string; source_verified: boolean };
   review_status: string;
   uncertainty: string;
-  contraindications: string;
-  escalation: string;
+  contraindications: string | null;
+  escalation: string | null;
   region_level: string;
   language: string;
 }
