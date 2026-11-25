@@ -25,6 +25,9 @@ from app.services.weather import get_weather
 
 load_dotenv(".env")
 load_dotenv("app/.env")
+# The Spitch plugin reads SPITCH_API_KEY; accept the older SPITCH_API name too.
+if not os.getenv("SPITCH_API_KEY") and os.getenv("SPITCH_API"):
+    os.environ["SPITCH_API_KEY"] = os.environ["SPITCH_API"]
 logger = logging.getLogger("terrasync.voice")
 
 LANGUAGE_NAMES = {"en": "English", "yo": "Yorùbá"}
