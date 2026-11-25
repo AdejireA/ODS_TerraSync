@@ -1,2 +1,6 @@
 output/
 tmp/
+backend/.venv/
+backend/*.db
+backend/__pycache__/
+backend/**/__pycache__/
