@@ -283,7 +283,12 @@ export const translations = {
     tasksDueDate: "Due date (optional)",
     tasksMarkDone: "Mark done",
     tasksMarkPending: "Reopen",
+    tasksMarkSkipped: "Skip",
     tasksSignInNotice: "Sign in to track farm tasks.",
+    tasksStatusPending: "Pending",
+    tasksStatusDone: "Done",
+    tasksStatusSkipped: "Skipped",
+    tasksAllFarms: "All farms",
 
     // Knowledge browsing
     knowledgeTitle: "Agricultural knowledge",
@@ -571,7 +576,12 @@ export const translations = {
     tasksDueDate: "Ọjọ́ àṣekagbà (kò pọn dandan)",
     tasksMarkDone: "Sàmì sí pípé",
     tasksMarkPending: "Tún ṣí i",
+    tasksMarkSkipped: "Fo",
     tasksSignInNotice: "Wọlé láti tọpinpin iṣẹ́ oko.",
+    tasksStatusPending: "Ń dúró",
+    tasksStatusDone: "Ti parí",
+    tasksStatusSkipped: "Fò lé",
+    tasksAllFarms: "Gbogbo oko",
 
     knowledgeTitle: "Ìmọ̀ Iṣẹ́ Àgbẹ̀",
     knowledgeSearchPlaceholder: "Wá ìmọ̀ràn, f.a. kòkòrò, ìkórè",

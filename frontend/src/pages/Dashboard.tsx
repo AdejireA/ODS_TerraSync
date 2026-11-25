@@ -1,21 +1,49 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CloudSun, Lightbulb, ListChecks, Mic, Pencil, Sprout, Truck, Wheat } from "lucide-react";
+import { ListChecks, Mic, Pencil, Sprout, Wheat } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFarm } from "../contexts/FarmContext";
+import { useAuth } from "../contexts/AuthContext";
 import { cropImage, cropName } from "../data/crops";
 import { plantingStatusKey } from "../data/farmOptions";
+import { listTasks, type FarmTask } from "../lib/api";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { PageHeader } from "../components/ui/PageHeader";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { StatCard } from "../components/ui/StatCard";
 import { FeatureCard } from "../components/ui/FeatureCard";
+import { DailyInsights } from "../components/DailyInsights";
+import { WeatherCard } from "../components/WeatherCard";
 import { NotAvailableState } from "../components/ui/StatusStates";
 
 export function Dashboard() {
   const { t, language } = useLanguage();
   const { profile } = useFarm();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  const [selectedCropId, setSelectedCropId] = useState<string | null>(null);
+  const [tasks, setTasks] = useState<FarmTask[] | null>(null);
+
+  const activeCrop = useMemo(() => {
+    if (!profile) return null;
+    if (selectedCropId) {
+      const match = profile.crops.find((c) => c.id === selectedCropId);
+      if (match) return match;
+    }
+    return profile.crops.find((c) => c.status !== "harvested") ?? profile.crops[0] ?? null;
+  }, [profile, selectedCropId]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setTasks(null);
+      return;
+    }
+    listTasks({ status: "pending" })
+      .then(setTasks)
+      .catch(() => setTasks(null));
+  }, [isAuthenticated]);
 
   if (!profile) {
     return (
@@ -26,14 +54,14 @@ export function Dashboard() {
     );
   }
 
-  const plantedOrGrowing = profile.crops.filter((c) => c.status !== "harvested").length;
+  const overdueTasks = tasks?.filter((task) => task.due_date && task.due_date < new Date().toISOString().slice(0, 10)).length ?? 0;
 
   return (
     <div className="shell-container space-y-section py-section">
       {/* Farm overview */}
       <PageHeader
-        title={profile.farmName}
-        subtitle={`${profile.lga}, ${profile.state} · ${t("deviceLocalNotice")}`}
+        title={`${t("dashboardGreeting")}, ${user?.name || profile.farmName}`}
+        subtitle={`${profile.lga}, ${profile.state} · ${isAuthenticated ? t("farmSyncSynced") : t("deviceLocalNotice")}`}
         action={
           <Button variant="outline" size="sm" onClick={() => navigate("/onboarding")}>
             <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
@@ -69,37 +97,80 @@ export function Dashboard() {
             <Button variant="secondary" onClick={() => navigate("/voice")}>
               {t("voiceStart")}
             </Button>
-            <span className="text-xs text-primary-foreground/70">{t("voiceComingSoon")}</span>
           </div>
         </Card>
 
         {/* Farm summary */}
         <div className="col-span-1 grid grid-cols-2 gap-3 lg:grid-cols-1">
           <StatCard icon={Sprout} label={t("dashboardMyCrops")} value={profile.crops.length} />
-          <StatCard icon={Wheat} label={t("dashboardUpcomingHarvests")} value={plantedOrGrowing} />
+          <StatCard
+            icon={ListChecks}
+            label={t("tasksTitle")}
+            value={isAuthenticated ? (tasks?.length ?? "…") : "—"}
+          />
         </div>
       </div>
 
       <div className="grid gap-section lg:grid-cols-2">
         {/* Today's Insights */}
         <section className="space-y-row">
-          <SectionHeader title={t("dashboardTodayInsights")} />
-          <NotAvailableState label={t("notAvailableInsights")}>
-            <Lightbulb className="mt-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-          </NotAvailableState>
+          <SectionHeader
+            title={activeCrop ? `${t("insightsSelectCrop")} ${cropName(activeCrop.cropId, language)}` : t("dashboardTodayInsights")}
+            action={
+              profile.crops.length > 1 ? (
+                <select
+                  value={activeCrop?.id ?? ""}
+                  onChange={(e) => setSelectedCropId(e.target.value)}
+                  className="rounded-md border border-border bg-card p-1 text-xs"
+                >
+                  {profile.crops.map((crop) => (
+                    <option key={crop.id} value={crop.id}>{cropName(crop.cropId, language)}</option>
+                  ))}
+                </select>
+              ) : undefined
+            }
+          />
+          {activeCrop ? (
+            <DailyInsights profile={profile} crop={activeCrop} />
+          ) : (
+            <NotAvailableState label={t("notAvailableInsights")} />
+          )}
         </section>
 
         {/* Weather Intelligence */}
         <section className="space-y-row">
           <SectionHeader title={t("dashboardWeather")} />
-          <NotAvailableState label={t("notAvailableWeather")}>
-            <span className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <CloudSun className="h-3.5 w-3.5" aria-hidden="true" />
-              {profile.lga}, {profile.state}
-            </span>
-          </NotAvailableState>
+          <WeatherCard state={profile.state} lga={profile.lga} compact />
         </section>
       </div>
+
+      {/* Tasks summary */}
+      <section className="space-y-row">
+        <SectionHeader
+          title={t("tasksTitle")}
+          action={
+            <button type="button" className="text-sm font-medium text-primary underline" onClick={() => navigate("/tasks")}>
+              {t("tasksTitle")}
+            </button>
+          }
+        />
+        {!isAuthenticated ? (
+          <NotAvailableState label={t("tasksSignInNotice")} />
+        ) : tasks == null ? (
+          <NotAvailableState label={t("insightsError")} />
+        ) : tasks.length === 0 ? (
+          <Card><p className="text-sm text-muted-foreground">{t("tasksEmpty")}</p></Card>
+        ) : (
+          <Card className="flex items-center gap-4">
+            <p className="text-sm">
+              <span className="font-bold text-primary">{tasks.length}</span> {t("tasksStatusPending")}
+            </p>
+            {overdueTasks > 0 && (
+              <p className="text-sm text-destructive">{overdueTasks} overdue</p>
+            )}
+          </Card>
+        )}
+      </section>
 
       {/* My Crops */}
       <section className="space-y-row">
@@ -144,20 +215,6 @@ export function Dashboard() {
             title={t("navProduceBoard")}
             description={t("boardTitle")}
             onClick={() => navigate("/harvest/board")}
-          />
-          <FeatureCard
-            icon={Truck}
-            title={t("dashboardUpcomingHarvests")}
-            description={t("notAvailableTasks")}
-            disabled
-            badge={t("comingSoon")}
-          />
-          <FeatureCard
-            icon={Lightbulb}
-            title={t("dashboardFarmTasks")}
-            description={t("notAvailableTasks")}
-            disabled
-            badge={t("comingSoon")}
           />
         </div>
       </section>

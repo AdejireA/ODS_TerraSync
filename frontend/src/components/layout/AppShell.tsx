@@ -27,7 +27,7 @@ interface NavItem {
 const sidebarItems: NavItem[] = [
   { key: "navOverview", to: "/dashboard", icon: Home },
   { key: "navMyFarm", to: "/onboarding", icon: Sprout },
-  { key: "navWeather", icon: CloudSun },
+  { key: "navWeather", to: "/weather", icon: CloudSun },
   { key: "navFarmTasks", to: "/tasks", icon: ListChecks },
   { key: "navKnowledge", to: "/knowledge", icon: BookOpen },
   { key: "navVoiceAssistant", to: "/voice", icon: Mic },

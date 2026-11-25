@@ -11,6 +11,7 @@ import { CropDetail } from "./pages/CropDetail";
 import { ReportForm } from "./pages/ReportForm";
 import { Board } from "./pages/Board";
 import { Voice } from "./pages/Voice";
+import { Weather } from "./pages/Weather";
 import { Settings } from "./pages/Settings";
 import { Knowledge } from "./pages/Knowledge";
 import { Tasks } from "./pages/Tasks";
@@ -32,6 +33,7 @@ export default function App() {
                 <Route path="/harvest/report" element={<ReportForm />} />
                 <Route path="/harvest/board" element={<Board />} />
                 <Route path="/voice" element={<Voice />} />
+                <Route path="/weather" element={<Weather />} />
                 <Route path="/knowledge" element={<Knowledge />} />
                 <Route path="/tasks" element={<Tasks />} />
                 <Route path="/settings" element={<Settings />} />
