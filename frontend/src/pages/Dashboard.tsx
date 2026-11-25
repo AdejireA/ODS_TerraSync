@@ -40,7 +40,7 @@ export function Dashboard() {
       </div>
 
       <Button className="w-full" onClick={() => navigate("/voice")}>
-        🎙 {t("dashboardTalkToTerraSync")}
+        {t("dashboardTalkToTerraSync")}
       </Button>
 
       <section className="space-y-row">

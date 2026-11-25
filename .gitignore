@@ -5,7 +5,6 @@ backend/*.db
 backend/__pycache__/
 backend/**/__pycache__/
 CLAUDE.md
-TERRASYNC_DEVELOPMENT_PLAN.md
 
 .env
 .env.*

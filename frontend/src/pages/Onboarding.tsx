@@ -215,7 +215,7 @@ export function Onboarding() {
               disabled={geoStatus === "detecting"}
               onClick={detectLocation}
             >
-              📍 {geoStatus === "detecting" ? t("onboardingLocationDetecting") : t("onboardingUseMyLocation")}
+              {geoStatus === "detecting" ? t("onboardingLocationDetecting") : t("onboardingUseMyLocation")}
             </Button>
             {geoStatus === "granted" && latitude != null && longitude != null && (
               <p className="text-metadata">
@@ -327,7 +327,6 @@ export function Onboarding() {
                       : "border-border bg-card"
                   }`}
                 >
-                  <span className="mr-2 text-lg">{option.icon}</span>
                   <span className="text-sm font-medium">{cropName(option.id, language)}</span>
                 </button>
               );

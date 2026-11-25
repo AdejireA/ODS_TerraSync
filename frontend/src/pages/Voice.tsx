@@ -30,7 +30,7 @@ export function Voice() {
       </label>
 
       <Button className="w-full" disabled>
-        🎙 {t("voiceStart")}
+        {t("voiceStart")}
       </Button>
 
       <NotAvailableState label={t("voiceComingSoon")} />
