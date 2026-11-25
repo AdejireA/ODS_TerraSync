@@ -43,7 +43,8 @@ Environment=TERRASYNC_DATABASE_PATH=/opt/terrasync/data/terrasync.db
 EnvironmentFile=/opt/terrasync/data/api.env
 # Optional: LiveKit credentials so the API can issue browser call tokens.
 EnvironmentFile=-/opt/terrasync/data/voice.env
-ExecStart=/opt/terrasync/current/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+# --proxy-headers: behind nginx, use X-Forwarded-For as the client address (rate limits are per visitor).
+ExecStart=/opt/terrasync/current/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips 127.0.0.1
 Restart=on-failure
 [Install]
 WantedBy=multi-user.target

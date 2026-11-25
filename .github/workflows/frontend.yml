@@ -1,0 +1,71 @@
+name: Frontend build and deployment
+on:
+  pull_request:
+    paths: ['frontend/**', '.github/workflows/frontend.yml']
+  push:
+    branches: [main]
+    paths: ['frontend/**', '.github/workflows/frontend.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: terrasync-frontend-deploy
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Type check
+        run: npx tsc -p tsconfig.app.json --noEmit
+      - name: Production build
+        env:
+          VITE_API_BASE_URL: /api/v1
+        run: npx vite build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 7
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.NOBUS_DEPLOY_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.NOBUS_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_KEY" && test -n "$SSH_KNOWN_HOSTS"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Deploy frontend
+        env:
+          NOBUS_HOST: ${{ secrets.NOBUS_HOST }}
+          TERRASYNC_DOMAIN: ${{ vars.TERRASYNC_DOMAIN }}
+          TERRASYNC_CERT_EMAIL: ${{ vars.TERRASYNC_CERT_EMAIL }}
+        run: |
+          test -n "$NOBUS_HOST"
+          tar -czf /tmp/terrasync-frontend.tar.gz -C dist .
+          dest="/tmp/terrasync-frontend-${GITHUB_RUN_ID}"
+          ssh -o StrictHostKeyChecking=yes "ubuntu@$NOBUS_HOST" "mkdir -p $dest"
+          scp -o StrictHostKeyChecking=yes /tmp/terrasync-frontend.tar.gz frontend/deploy/install.sh "ubuntu@$NOBUS_HOST:$dest/"
+          ssh -o StrictHostKeyChecking=yes "ubuntu@$NOBUS_HOST" \
+            "TERRASYNC_DOMAIN='${TERRASYNC_DOMAIN}' TERRASYNC_CERT_EMAIL='${TERRASYNC_CERT_EMAIL}' bash $dest/install.sh $dest/terrasync-frontend.tar.gz"
