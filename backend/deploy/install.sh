@@ -10,6 +10,10 @@ mkdir -p "$release"
 tar -xzf "$archive" -C "$release"
 python3 -m venv "$release/.venv"
 "$release/.venv/bin/pip" install -r "$release/requirements.txt"
+if [ ! -f "$root/data/api.env" ]; then
+    umask 077
+    printf 'TERRASYNC_SECRET_KEY=%s\n' "$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')" > "$root/data/api.env"
+fi
 sudo tee /etc/systemd/system/terrasync-api.service >/dev/null <<'UNIT'
 [Unit]
 Description=TerraSync API
@@ -18,6 +22,7 @@ After=network.target
 User=ubuntu
 WorkingDirectory=/opt/terrasync/current
 Environment=TERRASYNC_DATABASE_PATH=/opt/terrasync/data/terrasync.db
+EnvironmentFile=/opt/terrasync/data/api.env
 ExecStart=/opt/terrasync/current/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
 Restart=on-failure
 [Install]
@@ -27,8 +32,7 @@ ln -sfn "$release" "$root/current-next"
 mv -Tf "$root/current-next" "$root/current"
 sudo systemctl daemon-reload
 sudo systemctl enable terrasync-api >/dev/null
-sudo systemctl restart terrasync-api
-if ! curl --fail --silent --retry 10 --retry-delay 1 --retry-connrefused http://127.0.0.1:8000/health >/dev/null; then
+if ! sudo systemctl restart terrasync-api || ! curl --fail --silent --retry 10 --retry-delay 1 --retry-connrefused http://127.0.0.1:8000/health >/dev/null; then
   if [ -n "$previous" ] && [ -d "$previous" ]; then
     ln -sfn "$previous" "$root/current-next"
     mv -Tf "$root/current-next" "$root/current"
