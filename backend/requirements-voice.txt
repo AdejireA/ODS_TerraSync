@@ -1,0 +1,3 @@
+-r requirements.txt
+livekit-agents[spitch,silero]~=1.8
+python-dotenv>=1,<2
