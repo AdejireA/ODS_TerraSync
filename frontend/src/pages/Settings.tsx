@@ -34,7 +34,7 @@ export function Settings() {
           ) : (
             <>
               <p className="text-sm text-muted-foreground">{t("authSignInPrompt")}</p>
-              <Button size="sm" onClick={() => navigate("/login")}>
+              <Button size="sm" onClick={() => navigate("/login", { state: { from: "/settings" } })}>
                 {t("authLogin")}
               </Button>
             </>

@@ -246,6 +246,11 @@ export const translations = {
     authWhyBody: "An account saves your farm to the server, so Daily Insights, weather, tasks and call history follow you across devices. You can keep using TerraSync as a guest without one.",
     authContinueGuest: "Continue as guest",
     authSignInPrompt: "Sign in to save your farm and unlock insights, tasks and call history.",
+    authSessionExpired: "Your session has expired. Please sign in again.",
+    authPhoneInvalid: "Enter a valid phone number.",
+    authPinInvalid: "PIN must be 4–8 digits.",
+    authShowPin: "Show PIN",
+    authHidePin: "Hide PIN",
 
     // Farm sync
     farmSyncSynced: "Synced to your account",
@@ -533,6 +538,11 @@ export const translations = {
     authWhyBody: "Àkáǔntì ń fi oko rẹ pamọ́ sórí olupin, kí Ìmọ̀ ojoojúmọ́, ojú ọjọ́, iṣẹ́ àti ìtàn ìpè le tẹ̀lé ọ ní gbogbo ẹ̀rọ. O lè ṣì lo TerraSync láìsí àkáǔntì.",
     authContinueGuest: "Tẹ̀síwájú láìsí àkáǔntì",
     authSignInPrompt: "Wọlé láti fi oko rẹ pamọ́ kí o sì lo ìmọ̀, iṣẹ́ àti ìtàn ìpè.",
+    authSessionExpired: "Àkókò ìwọlé rẹ ti parí. Jọ̀wọ́ wọlé padà.",
+    authPhoneInvalid: "Fi nọ́mbà fóònù tó tọ́ sílẹ̀.",
+    authPinInvalid: "PIN gbọ́dọ̀ jẹ́ nọ́mbà 4–8.",
+    authShowPin: "Fi PIN hàn",
+    authHidePin: "Fi PIN pamọ́",
 
     farmSyncSynced: "Ti so pọ̀ mọ́ àkáǔntì rẹ",
     farmSyncLocalOnly: "A fi pamọ́ sórí ẹ̀rọ yìí nìkan",

@@ -29,6 +29,11 @@ export class ApiError extends Error {
   }
 }
 
+// Fired when a request sent a bearer token and the server rejected it (expired
+// or invalid). AuthContext listens for this to clear the session and send the
+// farmer back to the login screen, instead of leaving a dead token around.
+export const AUTH_EXPIRED_EVENT = "terrasync:auth-expired";
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAuthToken();
   const response = await fetch(`${BASE_URL}${path}`, {
@@ -47,6 +52,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       if (typeof detail === "string") message = detail;
     } catch {
       // Non-JSON error body; keep the raw text.
+    }
+    if (response.status === 401 && token) {
+      setAuthToken(null);
+      window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
     }
     throw new ApiError(response.status, message);
   }

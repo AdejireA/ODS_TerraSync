@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   BookOpen,
   CloudSun,
@@ -48,6 +48,7 @@ export function AppShell() {
   const { t } = useLanguage();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <div className="min-h-dvh bg-background lg:flex">
@@ -107,7 +108,7 @@ export function AppShell() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate("/login", { state: { from: location.pathname } })}
                   className="flex items-center gap-1 text-sm font-medium text-primary"
                 >
                   <LogIn className="h-4 w-4" aria-hidden="true" />
