@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { listHarvestReports, type HarvestReportSummary } from "../lib/api";
-import { STATE_PROFILES, getLgasForState } from "../data/locations";
+import { STATE_PROFILES, getLgasForState, isStateActive } from "../data/locations";
 import { Card } from "../components/ui/Card";
+import { PageHeader } from "../components/ui/PageHeader";
 import { LoadingState, ErrorState, EmptyState } from "../components/ui/StatusStates";
 
 type LoadState = "loading" | "ready" | "error";
@@ -43,8 +44,8 @@ export function Board() {
   );
 
   return (
-    <div className="app-container space-y-field py-section">
-      <h2 className="text-section-heading font-semibold text-primary">{t("boardTitle")}</h2>
+    <div className="shell-container space-y-field py-section">
+      <PageHeader title={t("boardTitle")} />
 
       <div className="flex gap-2 overflow-x-auto">
         <select
@@ -57,7 +58,9 @@ export function Board() {
         >
           <option value="">{t("state")}</option>
           {STATE_PROFILES.map((option) => (
-            <option key={option.name} value={option.name}>{option.name}</option>
+            <option key={option.name} value={option.name} disabled={!isStateActive(option.name)}>
+              {option.name}{!isStateActive(option.name) ? ` ${t("stateComingSoon")}` : ""}
+            </option>
           ))}
         </select>
 
@@ -91,7 +94,7 @@ export function Board() {
         <EmptyState label={t("boardEmpty")} />
       )}
 
-      <ul className="space-y-row">
+      <ul className="grid gap-row sm:grid-cols-2 lg:grid-cols-3">
         {filteredReports.map((report) => (
           <li key={report.id}>
             <Card>

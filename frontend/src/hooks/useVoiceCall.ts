@@ -35,6 +35,8 @@ export interface TranscriptLine {
 export function useVoiceCall() {
   const roomRef = useRef<Room | null>(null);
   const audioRef = useRef<HTMLDivElement | null>(null);
+  const attemptRef = useRef(0);
+  const activeRef = useRef(false);
   const [status, setStatus] = useState<CallStatus>("idle");
   const [agentState, setAgentState] = useState<AgentState>(null);
   const [error, setError] = useState<CallError>(null);
@@ -55,16 +57,21 @@ export function useVoiceCall() {
   const cleanup = useCallback(() => {
     roomRef.current?.removeAllListeners();
     roomRef.current = null;
+    activeRef.current = false;
     if (audioRef.current) audioRef.current.innerHTML = "";
   }, []);
 
   const start = useCallback(
     async (language: "en" | "yo", farmId?: string) => {
-      if (roomRef.current) return;
+      if (activeRef.current) return;
+      activeRef.current = true;
+      const attempt = ++attemptRef.current;
+      const cancelled = () => attempt !== attemptRef.current;
       setError(null);
       setTranscript([]);
       setAgentState(null);
       setMuted(false);
+      setTranscriptsStored(false);
       setStatus("connecting");
 
       // Ask for the microphone first so a denial is reported clearly.
@@ -72,19 +79,25 @@ export function useVoiceCall() {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach((track) => track.stop());
       } catch {
+        if (cancelled()) return;
+        activeRef.current = false;
         setError("mic_denied");
         setStatus("error");
         return;
       }
+      if (cancelled()) return;
 
       let session;
       try {
         session = await createVoiceSession(language, farmId);
       } catch (err) {
+        if (cancelled()) return;
+        activeRef.current = false;
         setError(err instanceof ApiError && err.status === 503 ? "unavailable" : "failed");
         setStatus("error");
         return;
       }
+      if (cancelled()) return;
       setTranscriptsStored(session.transcripts_stored);
 
       const room = new Room({ adaptiveStream: true, dynacast: true });
@@ -104,13 +117,23 @@ export function useVoiceCall() {
         .on(RoomEvent.ParticipantConnected, (p) => {
           if (isAgent(p)) setStatus("connected");
         })
+        .on(RoomEvent.ParticipantDisconnected, () => {
+          if (!Array.from(room.remoteParticipants.values()).some(isAgent)) {
+            setAgentState(null);
+            setStatus("waiting_agent");
+          }
+        })
         .on(RoomEvent.ParticipantAttributesChanged, (_changed, p) => {
           const state = p.attributes["lk.agent.state"];
           if (state) setAgentState(state as AgentState);
         })
         .on(RoomEvent.Reconnecting, () => setStatus("reconnecting"))
-        .on(RoomEvent.Reconnected, () => setStatus("connected"))
+        .on(RoomEvent.Reconnected, () => setStatus(
+          Array.from(room.remoteParticipants.values()).some(isAgent) ? "connected" : "waiting_agent",
+        ))
         .on(RoomEvent.Disconnected, () => {
+          if (roomRef.current !== room) return;
+          ++attemptRef.current;
           cleanup();
           setAgentState(null);
           setStatus((current) => (current === "error" ? current : "ended"));
@@ -122,21 +145,26 @@ export function useVoiceCall() {
         const speaker = participantInfo.identity === room.localParticipant.identity ? "user" : "assistant";
         let text = "";
         for await (const chunk of reader) {
+          if (cancelled()) return;
           text += chunk;
           upsertLine({ id, speaker, text, final: false });
         }
-        upsertLine({ id, speaker, text, final: true });
+        if (!cancelled()) upsertLine({ id, speaker, text, final: true });
       });
 
       try {
         await room.connect(session.url, session.token);
+        if (cancelled()) { await room.disconnect(); return; }
         await room.localParticipant.setMicrophoneEnabled(true);
+        if (cancelled()) { await room.disconnect(); return; }
         await room.startAudio();
+        if (cancelled()) { await room.disconnect(); return; }
         const agentPresent = Array.from(room.remoteParticipants.values()).some(isAgent);
         setStatus(agentPresent ? "connected" : "waiting_agent");
       } catch {
-        await room.disconnect();
+        if (cancelled()) return;
         cleanup();
+        await room.disconnect();
         setError("failed");
         setStatus("error");
       }
@@ -145,24 +173,32 @@ export function useVoiceCall() {
   );
 
   const end = useCallback(async () => {
+    ++attemptRef.current;
     const room = roomRef.current;
-    if (room && room.state !== ConnectionState.Disconnected) await room.disconnect();
     cleanup();
     setAgentState(null);
     setStatus("ended");
+    if (room && room.state !== ConnectionState.Disconnected) await room.disconnect();
   }, [cleanup]);
 
   const toggleMute = useCallback(async () => {
     const room = roomRef.current;
     if (!room) return;
     const next = !muted;
-    await room.localParticipant.setMicrophoneEnabled(!next);
-    setMuted(next);
+    try {
+      await room.localParticipant.setMicrophoneEnabled(!next);
+      if (roomRef.current === room) setMuted(next);
+    } catch {
+      if (roomRef.current === room) setError("failed");
+    }
   }, [muted]);
 
   useEffect(() => () => {
-    void roomRef.current?.disconnect();
-  }, []);
+    ++attemptRef.current;
+    const room = roomRef.current;
+    cleanup();
+    void room?.disconnect();
+  }, [cleanup]);
 
   return { status, agentState, error, muted, transcript, transcriptsStored, start, end, toggleMute, audioRef };
 }

@@ -3,8 +3,18 @@ export interface StateProfile {
   lgas: string[];
 }
 
-// Official LGA lists for TerraSync's four-state initial coverage area.
-// Ogun is the primary pilot state; the others are initial expansion coverage.
+// For the hackathon release, active coverage is Ogun State only. The other
+// three states' data stays in STATE_PROFILES for future expansion but is
+// disabled for selection rather than deleted.
+export const ACTIVE_STATES: readonly string[] = ["Ogun"];
+
+export function isStateActive(stateName: string): boolean {
+  return ACTIVE_STATES.includes(stateName);
+}
+
+// Official LGA lists for TerraSync's four-state architecture. Ogun is the
+// active hackathon-release state; Ondo, Osun and Lagos are retained for
+// future expansion but disabled for selection in this release.
 export const STATE_PROFILES: StateProfile[] = [
   {
     name: "Ogun",

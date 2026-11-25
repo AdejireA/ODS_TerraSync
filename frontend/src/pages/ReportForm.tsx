@@ -2,9 +2,10 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { createHarvestReport } from "../lib/api";
 import { CROP_PROFILES, cropName } from "../data/crops";
-import { STATE_PROFILES, getLgasForState } from "../data/locations";
+import { STATE_PROFILES, getLgasForState, isStateActive } from "../data/locations";
 import { UNITS } from "../i18n/translations";
 import { Button } from "../components/ui/Button";
+import { PageHeader } from "../components/ui/PageHeader";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -47,8 +48,9 @@ export function ReportForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="app-container space-y-field py-section">
-      <h2 className="text-section-heading font-semibold text-primary">{t("reportFormTitle")}</h2>
+    <div className="shell-container py-section">
+    <form onSubmit={handleSubmit} className="mx-auto max-w-xl space-y-field">
+      <PageHeader title={t("reportFormTitle")} />
 
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-muted-foreground">{t("crop")}</span>
@@ -107,9 +109,12 @@ export function ReportForm() {
           className="w-full rounded-md border border-border bg-card p-2"
         >
           {STATE_PROFILES.map((option) => (
-            <option key={option.name} value={option.name}>{option.name}</option>
+            <option key={option.name} value={option.name} disabled={!isStateActive(option.name)}>
+              {option.name}{!isStateActive(option.name) ? ` ${t("stateComingSoon")}` : ""}
+            </option>
           ))}
         </select>
+        <p className="mt-1 text-metadata">{t("activeStateNotice")}</p>
       </label>
 
       <label className="block">
@@ -161,5 +166,6 @@ export function ReportForm() {
         <p className="rounded-md bg-destructive-surface p-3 text-sm text-destructive">{t("submitError")}</p>
       )}
     </form>
+    </div>
   );
 }
