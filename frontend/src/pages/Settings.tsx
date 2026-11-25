@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFarm } from "../contexts/FarmContext";
+import { useAuth } from "../contexts/AuthContext";
 import { PageHeader } from "../components/ui/PageHeader";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { Card } from "../components/ui/Card";
@@ -10,11 +11,36 @@ import { LanguageToggle } from "../components/LanguageToggle";
 export function Settings() {
   const { t } = useLanguage();
   const { profile } = useFarm();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   return (
     <div className="shell-container space-y-section py-section">
       <PageHeader title={t("settingsTitle")} />
+
+      <section className="space-y-row">
+        <SectionHeader title={t("navAccount")} />
+        <Card className="space-y-3">
+          {isAuthenticated ? (
+            <>
+              <p className="text-sm font-medium">
+                {t("authLoggedInAs")} {user?.name || user?.phone}
+              </p>
+              <p className="text-metadata">{user?.role}</p>
+              <Button variant="outline" size="sm" onClick={logout}>
+                {t("authLogout")}
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">{t("authSignInPrompt")}</p>
+              <Button size="sm" onClick={() => navigate("/login")}>
+                {t("authLogin")}
+              </Button>
+            </>
+          )}
+        </Card>
+      </section>
 
       <section className="space-y-row">
         <SectionHeader title={t("settingsLanguage")} />

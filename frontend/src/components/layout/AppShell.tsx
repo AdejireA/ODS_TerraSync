@@ -1,9 +1,10 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
+  BookOpen,
   CloudSun,
-  HeartPulse,
   Home,
   ListChecks,
+  LogIn,
   Mic,
   MoreHorizontal,
   Phone,
@@ -13,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useAuth } from "../../contexts/AuthContext";
 import type { TranslationKey } from "../../i18n/translations";
 import { LanguageToggle } from "../LanguageToggle";
 
@@ -26,8 +28,8 @@ const sidebarItems: NavItem[] = [
   { key: "navOverview", to: "/dashboard", icon: Home },
   { key: "navMyFarm", to: "/onboarding", icon: Sprout },
   { key: "navWeather", icon: CloudSun },
-  { key: "navFarmTasks", icon: ListChecks },
-  { key: "navCropHealth", icon: HeartPulse },
+  { key: "navFarmTasks", to: "/tasks", icon: ListChecks },
+  { key: "navKnowledge", to: "/knowledge", icon: BookOpen },
   { key: "navVoiceAssistant", to: "/voice", icon: Mic },
   { key: "navHarvest", to: "/harvest/report", icon: Wheat },
   { key: "navProduceBoard", to: "/harvest/board", icon: ListChecks },
@@ -44,6 +46,8 @@ const mobileItems: NavItem[] = [
 
 export function AppShell() {
   const { t } = useLanguage();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-dvh bg-background lg:flex">
@@ -91,7 +95,27 @@ export function AppShell() {
           <div className="shell-container flex h-16 items-center justify-between">
             <h1 className="text-lg font-bold text-primary lg:hidden">{t("appTitle")}</h1>
             <span className="hidden text-sm font-medium text-muted-foreground lg:inline" />
-            <LanguageToggle />
+            <div className="flex items-center gap-3">
+              {isAuthenticated ? (
+                <button
+                  type="button"
+                  onClick={() => navigate("/settings")}
+                  className="hidden text-sm font-medium text-muted-foreground sm:inline"
+                >
+                  {user?.name || user?.phone}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate("/login")}
+                  className="flex items-center gap-1 text-sm font-medium text-primary"
+                >
+                  <LogIn className="h-4 w-4" aria-hidden="true" />
+                  {t("authLogin")}
+                </button>
+              )}
+              <LanguageToggle />
+            </div>
           </div>
         </header>
 

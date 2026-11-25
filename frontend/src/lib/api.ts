@@ -1,5 +1,4 @@
-// Client for the FastAPI backend (codex/backend-ci-cd @ 02489f2). Endpoints and
-// shapes here are inspected from that branch's actual source, not guessed.
+// Shared client for the merged FastAPI routes, including authenticated requests.
 const BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
 const TOKEN_STORAGE_KEY = "terrasync-token";

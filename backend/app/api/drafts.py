@@ -1,40 +1,32 @@
-import json
-from uuid import uuid4
+from fastapi import APIRouter, Depends
 
-from fastapi import APIRouter, HTTPException
-from app.api.harvest import HarvestReport
-from app.core.database import connection
+from app.core.ratelimit import rate_limit
+from app.core.security import User, optional_user
+from app.services import harvest
+from app.services.harvest import HarvestReport
 
 router = APIRouter(prefix="/harvest-drafts", tags=["harvest drafts"])
 
-@router.post("", status_code=201)
-def create_draft(report: HarvestReport):
-    draft_id = str(uuid4())
-    with connection() as db:
-        db.execute("INSERT INTO harvest_drafts (id, payload) VALUES (?, ?)", (draft_id, report.model_dump_json()))
-    return {"id": draft_id, "report": report}
+
+def _uid(user: User | None) -> str | None:
+    return user.id if user else None
+
+
+@router.post("", status_code=201, dependencies=[Depends(rate_limit("harvest-draft", 30))])
+def create_draft(report: HarvestReport, user: User | None = Depends(optional_user)):
+    return harvest.create_draft(report, _uid(user))
+
+
+@router.get("/{draft_id}")
+def get_draft(draft_id: str, user: User | None = Depends(optional_user)):
+    return harvest.get_draft(draft_id, _uid(user))
+
 
 @router.put("/{draft_id}")
-def update_draft(draft_id: str, report: HarvestReport):
-    with connection() as db:
-        result = db.execute("UPDATE harvest_drafts SET payload = ? WHERE id = ? AND report_id IS NULL", (report.model_dump_json(), draft_id))
-        if not result.rowcount:
-            raise HTTPException(status_code=404, detail="Draft not found or already confirmed")
-    return {"id": draft_id, "report": report}
+def update_draft(draft_id: str, report: HarvestReport, user: User | None = Depends(optional_user)):
+    return harvest.update_draft(draft_id, report, _uid(user))
+
 
 @router.post("/{draft_id}/confirm")
-def confirm_draft(draft_id: str):
-    with connection() as db:
-        db.execute("BEGIN IMMEDIATE")
-        draft = db.execute("SELECT payload, report_id FROM harvest_drafts WHERE id = ?", (draft_id,)).fetchone()
-        if draft is None:
-            raise HTTPException(status_code=404, detail="Draft not found")
-        if draft["report_id"] is not None:
-            return {"id": draft["report_id"], "status": "created"}
-        report = HarvestReport.model_validate(json.loads(draft["payload"]))
-        result = db.execute(
-            "INSERT INTO harvest_reports (crop, quantity, unit, state, lga, available_date, contact) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (report.crop, report.quantity, report.unit, report.state, report.lga, report.available_date.isoformat(), report.contact),
-        )
-        db.execute("UPDATE harvest_drafts SET report_id = ? WHERE id = ?", (result.lastrowid, draft_id))
-        return {"id": result.lastrowid, "status": "created"}
+def confirm_draft(draft_id: str, user: User | None = Depends(optional_user)):
+    return harvest.confirm_draft(draft_id, _uid(user))
