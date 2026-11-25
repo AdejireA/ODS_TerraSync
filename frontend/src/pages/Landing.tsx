@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Mic, Sprout, Truck } from "lucide-react";
+import { Leaf, Mic, Sprout, Truck } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFarm } from "../contexts/FarmContext";
 import { Button } from "../components/ui/Button";
@@ -18,16 +18,19 @@ export function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-section px-page py-section">
+    <div className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-8 px-page py-section">
       <div className="flex justify-end">
         <LanguageToggle />
       </div>
 
-      <div className="space-y-2 text-center">
-        <p className="text-sm font-semibold uppercase tracking-wide text-secondary">
-          {t("appTitle")}
-        </p>
-        <h1 className="text-page-title text-primary">{t("landingHeadline")}</h1>
+      <div className="space-y-4 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Leaf className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <p className="text-xl font-extrabold tracking-tight text-primary">{t("appTitle")}</p>
+        </div>
+        <h1 className="text-4xl font-bold leading-tight text-primary sm:text-5xl">{t("landingHeadline")}</h1>
         <p className="text-reading text-muted-foreground">{t("landingSubheadline")}</p>
       </div>
 
