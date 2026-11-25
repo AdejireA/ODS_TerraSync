@@ -56,7 +56,11 @@ export function Settings() {
             <>
               <p className="text-sm font-medium">{profile.farmName}</p>
               <p className="text-sm text-muted-foreground">{profile.lga}, {profile.state}</p>
-              <p className="text-metadata">{t("settingsDataNotice")}</p>
+              <p className="text-metadata">
+                {isAuthenticated && profile.syncedUserId === user?.id
+                  ? t("farmSyncSynced")
+                  : t("settingsDataNotice")}
+              </p>
               <Button variant="outline" size="sm" onClick={() => navigate("/onboarding")}>
                 {t("settingsFarmEdit")}
               </Button>
