@@ -43,3 +43,17 @@ export function createHarvestReport(report: HarvestReportInput) {
 export function listHarvestReports() {
   return request<HarvestReportSummary[]>("/harvest-reports");
 }
+
+export interface GuidanceItem {
+  crop: string;
+  language: string;
+  title: string;
+  content: string;
+  source_url: string | null;
+}
+
+export function getGuidance(crop: string, language: "en" | "yo") {
+  return request<{ items: GuidanceItem[] }>(
+    `/guidance?crop=${encodeURIComponent(crop)}&language=${language}`,
+  );
+}

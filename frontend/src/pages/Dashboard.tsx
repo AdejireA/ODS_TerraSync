@@ -57,10 +57,17 @@ export function Dashboard() {
         <h3 className="text-section-heading text-primary">{t("dashboardMyCrops")}</h3>
         <div className="grid grid-cols-2 gap-2">
           {profile.crops.map((crop) => (
-            <Card key={crop.id}>
-              <p className="text-sm font-medium">{cropName(crop.cropId, language)}</p>
-              <p className="text-metadata">{t(plantingStatusKey(crop.status))}</p>
-            </Card>
+            <button
+              key={crop.id}
+              type="button"
+              onClick={() => navigate(`/crops/${crop.cropId}`)}
+              className="text-left"
+            >
+              <Card>
+                <p className="text-sm font-medium">{cropName(crop.cropId, language)}</p>
+                <p className="text-metadata">{t(plantingStatusKey(crop.status))}</p>
+              </Card>
+            </button>
           ))}
         </div>
       </section>

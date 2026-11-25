@@ -115,6 +115,18 @@ export const translations = {
     notAvailableTasks: "Farm tasks are not connected yet.",
     notAvailableCropAdvisory: "Crop advisory content is not connected yet.",
 
+    // Crop detail / advisory
+    cropDetailBack: "Back to dashboard",
+    cropDetailMyRecords: "Your records",
+    cropDetailGuidanceTitle: "Reviewed guidance",
+    cropDetailGuidanceLoading: "Checking for reviewed guidance...",
+    cropDetailGuidanceError: "Could not load guidance right now.",
+    cropDetailGuidanceEmpty: "No reviewed guidance for this crop yet. Guidance is only shown once it has been checked by TerraSync.",
+    cropDetailSource: "Source",
+    cropDetailNoRecord: "You haven't added this crop to your farm yet.",
+    cropDetailVariety: "Variety",
+    cropDetailPlantedArea: "Area planted",
+
     // Nav
     navHome: "Home",
     navReport: "Report harvest",
@@ -257,6 +269,17 @@ export const translations = {
     notAvailableWeather: "Dátà ojú ọjọ́ kò tí ì so pọ̀.",
     notAvailableTasks: "Iṣẹ́ oko kò tí ì so pọ̀.",
     notAvailableCropAdvisory: "Àlàyé nípa ohun ọ̀gbìn kò tí ì so pọ̀.",
+
+    cropDetailBack: "Padà sí pátákò",
+    cropDetailMyRecords: "Àwọn àkọsílẹ̀ rẹ",
+    cropDetailGuidanceTitle: "Ìmọ̀ràn tí a ṣàyẹ̀wò",
+    cropDetailGuidanceLoading: "Ń wá ìmọ̀ràn tí a ṣàyẹ̀wò...",
+    cropDetailGuidanceError: "A kò lè kó ìmọ̀ràn báyìí.",
+    cropDetailGuidanceEmpty: "Kò sí ìmọ̀ràn tí a ṣàyẹ̀wò fún ohun ọ̀gbìn yìí síbẹ̀. Ìmọ̀ràn máa hàn nìkan lẹ́yìn tí TerraSync ti ṣàyẹ̀wò rẹ̀.",
+    cropDetailSource: "Orísun",
+    cropDetailNoRecord: "O kò tí ì fi ohun ọ̀gbìn yìí kún oko rẹ.",
+    cropDetailVariety: "Irúgbìn",
+    cropDetailPlantedArea: "Ìwọ̀n ilẹ̀ tí a gbìn",
 
     navHome: "Ilé",
     navReport: "Ròyìn ìkórè",
