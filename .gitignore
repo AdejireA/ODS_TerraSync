@@ -1,5 +1,38 @@
+# Local generated files
 output/
 tmp/
+.vscode/
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.sqlite-journal
+*.sqlite3-journal
+*.db-wal
+*.db-shm
 backend/.venv/
 backend/*.db
 backend/__pycache__/
