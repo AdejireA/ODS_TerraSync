@@ -59,8 +59,6 @@ jobs:
       - name: Deploy frontend
         env:
           NOBUS_HOST: ${{ secrets.NOBUS_HOST }}
-          TERRASYNC_DOMAIN: ${{ vars.TERRASYNC_DOMAIN }}
-          TERRASYNC_CERT_EMAIL: ${{ vars.TERRASYNC_CERT_EMAIL }}
         run: |
           test -n "$NOBUS_HOST"
           tar -czf /tmp/terrasync-frontend.tar.gz -C dist .
@@ -68,4 +66,4 @@ jobs:
           ssh -o StrictHostKeyChecking=yes "ubuntu@$NOBUS_HOST" "mkdir -p $dest"
           scp -o StrictHostKeyChecking=yes /tmp/terrasync-frontend.tar.gz frontend/deploy/install.sh "ubuntu@$NOBUS_HOST:$dest/"
           ssh -o StrictHostKeyChecking=yes "ubuntu@$NOBUS_HOST" \
-            "TERRASYNC_DOMAIN='${TERRASYNC_DOMAIN}' TERRASYNC_CERT_EMAIL='${TERRASYNC_CERT_EMAIL}' bash $dest/install.sh $dest/terrasync-frontend.tar.gz"
+            "bash $dest/install.sh $dest/terrasync-frontend.tar.gz"
