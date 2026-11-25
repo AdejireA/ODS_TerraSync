@@ -13,3 +13,5 @@ uvicorn app.main:app --reload
 The client must obtain the farmer's confirmation before calling the create endpoint. SQLite is for local prototyping. Authentication, access-controlled contact retrieval, coordinator interest, reviewed guidance, localization, LiveKit/Spitch integration, and production deployment remain to be implemented. Do not expose this prototype publicly with real farmer data before access controls are in place.
 
 Structure: `app/api` contains HTTP routes, `app/core` holds infrastructure, and `app/services` is reserved for business logic and integrations. Set `TERRASYNC_DATABASE_PATH` to select the SQLite file.
+
+Additional endpoints: `GET /api/v1/guidance?crop=maize&language=en` returns reviewed guidance only, and `POST /api/v1/harvest-reports/{id}/interest` marks a report as having interest. Guidance starts empty until sourced content is reviewed and added. Interest is currently a single anonymous flag, not a buyer contact or notification. These endpoints are prototypes and require authentication and authorization before public use.
